@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Post-task hook: Play completion sound after any Claude task finishes
+# This hook runs in the claude-common shared repository
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOUND_FILE="$SCRIPT_DIR/../../assets/done.mp3"
+
+if [ -f "$SOUND_FILE" ]; then
+    # Try different audio players depending on the system
+    if command -v afplay >/dev/null 2>&1; then
+        # macOS
+        afplay "$SOUND_FILE" &
+    elif command -v aplay >/dev/null 2>&1; then
+        # Linux ALSA
+        aplay "$SOUND_FILE" &
+    elif command -v paplay >/dev/null 2>&1; then
+        # Linux PulseAudio
+        paplay "$SOUND_FILE" &
+    elif command -v play >/dev/null 2>&1; then
+        # Linux SoX
+        play "$SOUND_FILE" &
+    fi
+fi
