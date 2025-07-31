@@ -1,13 +1,14 @@
-# Claude Common - Shared Instructions
+# Claude Common - Universal Instructions
 
-This file contains shared Claude Code instructions and configurations that are used across multiple repositories.
+This file contains universal Claude Code instructions and configurations used across all repositories and products.
 
 ## Overview
 
 The `claude-common` repository provides:
-- **Shared Commands**: Common Claude commands available to all linked repositories
-- **Shared Instructions**: Common development guidelines and conventions  
+- **Universal Commands**: Git, deployment, and development commands that work across all products
+- **Universal Instructions**: Common development guidelines and conventions  
 - **Post-Task Hooks**: Shared functionality like completion sounds
+- **Shared Documentation**: Reference docs available to all projects
 - **Cross-Repository Integration**: Easy linking mechanism via `/init-common`
 
 ## Usage
@@ -18,30 +19,50 @@ From any repository that should use the shared commands, run:
 /init-common
 ```
 
-This command adds the claude-common directory to Claude's context, making all shared commands and instructions available.
+This command adds the claude-common directory to Claude's context, making all universal commands and instructions available.
 
 ### Shared Commands
-All commands in `.claude/commands/` are available to any repository that has run `/init-common`.
+All commands in `.claude/commands/` are universal utilities that work across all repositories and technology stacks.
 
 ### Shared Instructions
-These instructions are automatically honored by Claude when working in any linked repository, in addition to repository-specific CLAUDE.md files.
+These instructions are automatically honored by Claude when working in any linked repository, in addition to product-specific and repository-specific CLAUDE.md files.
 
-## Development Guidelines
+### Shared Documentation
+Reference documentation is available in the `docs/` directory:
+- `docs/CopyWriter.md` - Recruiter-UX copy guidelines
+- Additional shared docs can be added here
+
+## Universal Development Guidelines
 
 ### Code Style
 - Follow existing patterns and conventions in each repository
 - Use consistent naming and formatting
 - Always test changes before committing
+- Write clear, self-documenting code
 
-### Security
-- Never commit secrets, API keys, or credentials
-- Use environment variables for sensitive configuration
-- Follow security best practices
+### Security Best Practices
+- **NEVER** commit secrets, API keys, or credentials to any repository
+- Use environment variables for all sensitive configuration
+- Follow security best practices for the specific technology stack
+- Implement proper input validation and sanitization
 
-### Testing
-- Run tests before committing changes
-- Ensure all linting and type checking passes
+### Git Workflow
+- Use descriptive commit messages
+- Create feature branches for new work
+- Test thoroughly before merging
+- Keep commits focused and atomic
+
+### Testing Standards
+- Run all tests before committing changes
+- Ensure linting and type checking passes
+- Write tests for new functionality
 - Test integrations thoroughly
+
+### Documentation
+- Update documentation when changing functionality
+- Keep README files current
+- Document breaking changes and migration steps
+- Use clear, concise language
 
 ## Repository Integration
 
