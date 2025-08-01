@@ -1,6 +1,6 @@
-# Claude Common - LoopBack Legacy Platform Instructions
+# LoopBack 3 Legacy Platform Instructions
 
-This file contains Claude Code instructions specific to the 10x10 recruitment platform (LoopBack 3 legacy system).
+Development guidance for the legacy 10x10 recruitment platform (LoopBack 3 + React).
 
 ## System Overview
 
@@ -12,28 +12,7 @@ The 10x10 recruitment platform is a multi-component system consisting of:
 4. **Chrome Extension** (`10x10-chrome-extension/`) - Browser extension for LinkedIn integration
 5. **Database Utilities** (`MongoUtils/`) - MongoDB backup and maintenance scripts
 
-## Common Development Commands
-
-### Frontend (10by10-web-app-client/)
-- `npm run start:local` - Start development server on port 3001
-- `npm run build:production` - Production build with memory optimization
-- `npm test` - Run Jest tests
-- `npm run deploy:prod` - Deploy to production S3 and CloudFront
-
-### Backend (10by10-web-app/)
-- `npm start` - Start production server (port 3000)
-- `npm run start:local` - Start local development with nodemon and debugging
-- `npm run start:worker:local` - Start background worker process locally
-- `npm run lint` - Run ESLint
-- `npm test` - Run Jest tests
-- `npm run deploy:dev` - Deploy to development Elastic Beanstalk
-- `npm run deploy:prd1` - Deploy to production Elastic Beanstalk environment 1
-
-### Machine Learning Service (MatchingML/)
-- `docker-compose build` - Build ML service containers
-- `docker-compose up` - Start ML matching service on port 5005
-- `./flask_server/` contains the matching web service
-- `./learning/` contains model training and data processing
+Development commands are available in each repository's README.md file.
 
 ## Architecture Overview
 
@@ -52,13 +31,6 @@ The 10x10 recruitment platform is a multi-component system consisting of:
 - `/server/tasks/` - Background job definitions (email reminders, ATS sync)
 - `/server/queues/` - Queue processing for async operations
 - `/common/Helpers/` - Utility libraries and helper functions
-
-### Frontend Web Application (React)
-- **Framework**: React 18 with Create React App
-- **State Management**: Apollo Client 3 for GraphQL + local React state
-- **UI Libraries**: Material-UI v5, Ant Design v5
-- **Routing**: React Router v6 with role-based access control
-- **Key Features**: Advanced candidate-job matching, complex filtering, multi-environment deployments
 
 ### Machine Learning Service (Python Flask)
 - **Purpose**: Candidate-job matching algorithms and ML model serving

@@ -1,36 +1,16 @@
 # Claude Common - Universal Instructions
 
-This file contains universal Claude Code instructions and configurations used across all repositories and products.
+Universal Claude Code development guidelines for all repositories. For setup instructions, see README.md.
 
-## Overview
+## Purpose
 
-The `claude-common` repository provides:
-- **Universal Commands**: Git, deployment, and development commands that work across all products
-- **Universal Instructions**: Common development guidelines and conventions  
-- **Post-Task Hooks**: Shared functionality like completion sounds
-- **Shared Documentation**: Reference docs available to all projects
-- **Cross-Repository Integration**: Easy linking mechanism via `/init-common`
+- **Universal Development Guidelines**: Security, git workflow, testing standards
+- **Shared Documentation**: Cross-repository reference materials (`docs/`)
+- **Post-Task Hooks**: Completion sounds and shared functionality
 
-## Usage
+## Integration
 
-### Initial Setup
-From any repository that should use the shared commands, run:
-```bash
-/init-common
-```
-
-This command adds the claude-common directory to Claude's context, making all universal commands and instructions available.
-
-### Shared Commands
-All commands in `.claude/commands/` are universal utilities that work across all repositories and technology stacks.
-
-### Shared Instructions
-These instructions are automatically honored by Claude when working in any linked repository, in addition to product-specific and repository-specific CLAUDE.md files.
-
-### Shared Documentation
-Reference documentation is available in the `docs/` directory:
-- `docs/CopyWriter.md` - Recruiter-UX copy guidelines
-- Additional shared docs can be added here
+Repository-specific CLAUDE.md files supplement (don't override) these universal rules.
 
 ## Universal Development Guidelines
 
@@ -41,7 +21,8 @@ Reference documentation is available in the `docs/` directory:
 - Write clear, self-documenting code
 
 ### Security Best Practices
-- **NEVER** commit secrets, API keys, or credentials to any repository
+- **NEVER** commit secrets, API keys, or credentials to any repository.
+- New call DB directly from Front End
 - Use environment variables for all sensitive configuration
 - Follow security best practices for the specific technology stack
 - Implement proper input validation and sanitization
@@ -50,9 +31,9 @@ Reference documentation is available in the `docs/` directory:
 - Use descriptive commit messages
 - Create feature branches for new work
 - Test thoroughly before merging
-- Keep commits focused and atomic
+- Keep commits and PR focused and atomic
 
-### Testing Standards
+### Testing Standards before merge to dev or production repo
 - Run all tests before committing changes
 - Ensure linting and type checking passes
 - Write tests for new functionality
@@ -61,30 +42,6 @@ Reference documentation is available in the `docs/` directory:
 ### Documentation
 - Update documentation when changing functionality
 - Keep README files current
-- Document breaking changes and migration steps
-- Use clear, concise language
+- Document breaking changes, migration steps, todo later
+- Clear, concise - telegram style
 
-## Repository Integration
-
-### Adding New Repositories
-1. Ensure the repository has a `.claude/commands/` directory
-2. Create an `/init-common` command in the repository
-3. Run the `/init-common` command to link to claude-common
-
-### Command Precedence
-- Repository-specific commands override shared commands
-- Repository-specific CLAUDE.md rules supplement (don't override) shared rules
-- Local configuration takes precedence over shared configuration
-
-## Maintenance
-
-### Updating Shared Commands
-1. Make changes in `claude-common/.claude/commands/`
-2. Test changes across multiple repositories
-3. Commit and push changes to claude-common
-4. All linked repositories automatically get updates
-
-### Sound Configuration
-The post-task hook plays `assets/done.mp3` after Claude completes any task. To customize:
-1. Replace `assets/done.mp3` with your preferred sound file
-2. The hook automatically detects the appropriate audio player for your system

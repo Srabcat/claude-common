@@ -44,7 +44,7 @@ Link = navigation (View profile)
 Every extra word costs $100. Shrink text to ≤20 words, front-load the benefit, remove filler, keep recruiter tone
 
 | Element       | Max      | Rule                      | Example                                               |
-| ------------- | -------- | ------------------------- | ----------------------------------------------------- |
+| ------------- | -------- | ------------------------- | ---------------------------------|
 | Section Title | 3 words  | Noun first, sentence case | `Pipeline Stages`                                     |
 | Subtitle      | 8 words  | Adds context, no repeat   | `Active, upcoming, completed`                         |
 | Description   | 20 words | Benefit + action          | `See candidates ready for feedback. Filter by stage.` |
