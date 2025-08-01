@@ -1,12 +1,34 @@
 # Claude Common - Universal Instructions
 
-Universal Claude Code development guidelines for all repositories. For setup instructions, see README.md.
+Cross-repository coordination and universal development guidelines for 10x10 recruitment platform. For setup instructions, see README.md.
 
-## Purpose
+## Documentation Philosophy
 
-- **Universal Development Guidelines**: Security, git workflow, testing standards
-- **Shared Documentation**: Cross-repository reference materials (`docs/`)
-- **Post-Task Hooks**: Completion sounds and shared functionality
+**CLAUDE.md Purpose**: Development guidance, architecture, conventions - NOT operational commands
+**README.md Purpose**: Setup instructions, command reference, project overview
+**Key Principle**: Eliminate duplication across files and repositories
+
+### Lessons Learned
+- Commands belong in README.md files, not CLAUDE.md
+- File naming conventions should live in one authoritative location
+- Platform-wide architecture goes in shared locations, not duplicated per repo
+- Technology-specific guidance stays in relevant repositories
+- Cross-references prevent duplication while maintaining context
+
+## Repository Structure
+
+- **Legacy Platform**: `10by10-web-app/`, `10by10-web-app-client/` → See `loopback-legacy/claude.md`
+- **New SaaS Platform**: `NextSaaS/` → See `NextSaaS/CLAUDE.md`
+- **ML Service**: `MatchingML/` → Python Flask service
+- **Browser Extension**: `10x10-chrome-extension/` → LinkedIn integration
+- **Utilities**: `MongoUtils/` → Database maintenance
+
+## Technology-Specific Instructions
+
+For detailed development guidance:
+- **LoopBack 3 Legacy**: See `loopback-legacy/claude.md`
+- **Next.js SaaS**: See `NextSaaS/CLAUDE.md`
+- **This File**: Universal guidelines and cross-repo coordination
 
 ## Integration
 

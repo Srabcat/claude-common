@@ -1,6 +1,32 @@
 # Claude Common
 
-Shared Claude Code configurations, commands, and instructions for multiple repositories.
+Universal Claude Code configurations and shared instructions for the 10x10 recruitment platform repositories.
+
+## 10x10 Platform Overview
+
+Multi-component recruitment platform with legacy LoopBack 3 system and new Next.js SaaS application.
+
+**Legacy System** (Production)
+- React frontend + LoopBack 3 API
+- MongoDB database with ML matching service
+- LinkedIn Chrome extension integration
+
+**New SaaS Platform** (Development)
+- Next.js full-stack application
+- PostgreSQL with Drizzle ORM
+
+### Quick Start Platform
+
+```bash
+# Legacy Backend API
+cd 10by10-web-app && npm run start:local
+
+# Legacy Frontend
+cd 10by10-web-app-client && npm run start:local
+
+# New SaaS Platform
+cd NextSaaS && npm run dev
+```
 
 ## Quick Start
 
