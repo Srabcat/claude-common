@@ -65,6 +65,7 @@ Candidate:
 | `planning/database-schema/candidate-submissions-schema.md` | Database schema for candidate submissions workflow | 2025-08-08 | ✅ Complete |
 | `planning/database-schema/gpt-discussion-notes.md` | Database design discussion notes | 2025-08-08 | ✅ Complete |
 | `planning/database-schema/2025-08-08-ATS-user-candidate-schema-design.md` | **MAIN SCHEMA DESIGN** - Users, organizations, candidates with flexible access control | 2025-08-08 | ✅ Complete |
+| `active/2025-08-08-ATS-candidate-interface-PRD.md` | **FRONTEND PRD** - Complete engineering specification for candidate interface | 2025-08-08 | ✅ Complete |
 | `planning/frontend-architecture/2025-08-08-ATS-flexible-layout-technical-design.md` | **FRONTEND TECHNICAL DESIGN** - Flexible layout architecture | 2025-08-08 | ✅ Complete |
 | `planning/frontend-architecture/2025-08-08-ATS-engineering-design-decisions.md` | Engineering standards and anti-patterns documentation | 2025-08-08 | ✅ Complete |
 
