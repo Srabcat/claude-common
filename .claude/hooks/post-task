@@ -3,22 +3,43 @@
 # Post-task hook: Play completion sound after any Claude task finishes
 # This hook runs in the claude-common shared repository
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOUND_FILE="$SCRIPT_DIR/../../assets/done.mp3"
-
-if [ -f "$SOUND_FILE" ]; then
-    # Try different audio players depending on the system
+# Play pleasant but noticeable notification sounds
+play_notification() {
     if command -v afplay >/dev/null 2>&1; then
-        # macOS
-        afplay "$SOUND_FILE" &
-    elif command -v aplay >/dev/null 2>&1; then
-        # Linux ALSA
-        aplay "$SOUND_FILE" &
+        # macOS - Use nicer system sounds at good volume
+        # Gentle but noticeable chime sequence
+        afplay /System/Library/Sounds/Ping.aiff &
+        sleep 0.4
+        afplay /System/Library/Sounds/Pop.aiff &
+        
+        # Alternative pleasant sounds (uncomment to try):
+        # afplay /System/Library/Sounds/Purr.aiff &  # Gentle purr
+        # afplay /System/Library/Sounds/Tink.aiff &  # Soft tink
+        
     elif command -v paplay >/dev/null 2>&1; then
         # Linux PulseAudio
-        paplay "$SOUND_FILE" &
+        paplay /usr/share/sounds/alsa/Front_Left.wav 2>/dev/null &
+        
+    elif command -v aplay >/dev/null 2>&1; then
+        # Linux ALSA
+        aplay /usr/share/sounds/alsa/Front_Left.wav 2>/dev/null &
+        
     elif command -v play >/dev/null 2>&1; then
-        # Linux SoX
-        play "$SOUND_FILE" &
+        # Linux SoX - generate a beep
+        play -n synth 0.3 sine 800 vol 0.5 &
+        
+    else
+        # Fallback: terminal bell
+        echo -e "\a\a"
     fi
+}
+
+# Run the notification
+play_notification
+
+# Optional: Add visual notification for macOS
+if command -v osascript >/dev/null 2>&1; then
+    # Show a subtle notification (comment out if too distracting)
+    # osascript -e 'display notification "Claude task completed" with title "Claude Code"' &
+    true
 fi

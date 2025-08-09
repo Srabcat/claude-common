@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Post-task hook: LOUD and obvious completion notification
+# Copy this over post-task if you want more obvious notifications
+
+play_loud_notification() {
+    if command -v afplay >/dev/null 2>&1; then
+        # macOS - Multiple sounds for very obvious notification
+        
+        # Option 1: Triple ding with voice
+        afplay /System/Library/Sounds/Glass.aiff &
+        sleep 0.3
+        afplay /System/Library/Sounds/Glass.aiff &
+        sleep 0.3
+        afplay /System/Library/Sounds/Glass.aiff &
+        sleep 0.5
+        say "Claude task completed" &
+        
+        # Option 2: Different system sounds (uncomment to try)
+        # afplay /System/Library/Sounds/Ping.aiff &
+        # afplay /System/Library/Sounds/Pop.aiff &
+        # afplay /System/Library/Sounds/Purr.aiff &
+        
+    elif command -v paplay >/dev/null 2>&1; then
+        # Linux - Multiple beeps
+        for i in {1..3}; do
+            paplay /usr/share/sounds/alsa/Front_Left.wav 2>/dev/null &
+            sleep 0.3
+        done
+        
+    else
+        # Fallback: Multiple terminal bells
+        echo -e "\a\a\a"
+        sleep 0.5
+        echo -e "\a\a"
+    fi
+}
+
+# Run loud notification
+play_loud_notification
+
+# Optional: Visual notification
+if command -v osascript >/dev/null 2>&1; then
+    # Uncomment for desktop notification
+    osascript -e 'display notification "Claude has finished the task!" with title "🤖 Claude Code Complete" sound name "Glass"' &
+fi
