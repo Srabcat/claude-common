@@ -137,18 +137,41 @@ export function getCurrentUser(): User {
   return currentUser
 }
 
-// Navigation items based on role
+// Navigation items based on role - Research-based structure
 export const getNavigationItems = (role: UserRole) => {
-  const allItems = [
-    { id: 'dashboard', title: 'Dashboard', href: '/dashboard', roles: ['platform_admin', 'agency_recruiter', 'employer_recruiter'] as UserRole[] },
-    { id: 'candidates', title: 'Candidates', href: '/candidates', roles: ['platform_admin', 'agency_recruiter', 'employer_recruiter'] as UserRole[] },
-    { id: 'jobs', title: 'Jobs', href: '/jobs', roles: ['platform_admin', 'agency_recruiter', 'employer_recruiter'] as UserRole[] },
-    { id: 'employers', title: 'Employers', href: '/employers', roles: ['platform_admin'] as UserRole[] },
-    { id: 'agencies', title: 'Agencies', href: '/agencies', roles: ['platform_admin'] as UserRole[] },
-    { id: 'analytics', title: 'Analytics', href: '/analytics', roles: ['platform_admin', 'agency_recruiter', 'employer_recruiter'] as UserRole[] },
-    { id: 'messages', title: 'Messages', href: '/messages', roles: ['agency_recruiter', 'employer_recruiter'] as UserRole[] },
-    { id: 'settings', title: 'Settings', href: '/settings', roles: ['platform_admin', 'agency_recruiter', 'employer_recruiter'] as UserRole[] },
-  ]
-
-  return allItems.filter(item => item.roles.includes(role))
+  switch (role) {
+    case 'platform_admin':
+      return [
+        { id: 'dashboard', title: 'Dashboard', href: '/dashboard' },
+        { id: 'jobs', title: 'All Jobs', href: '/jobs' },
+        { id: 'candidates', title: 'Candidates', href: '/candidates' },
+        { id: 'employers', title: 'Employers', href: '/employers' },
+        { id: 'agencies', title: 'Agencies', href: '/agencies' },
+        { id: 'contacts', title: 'Contacts', href: '/contacts' },
+        { id: 'analytics', title: 'Analytics', href: '/analytics' },
+      ]
+    
+    case 'agency_recruiter':
+      return [
+        { id: 'dashboard', title: 'Dashboard', href: '/dashboard' },
+        { id: 'browse', title: 'Browse', href: '/browse' },  // Job marketplace (like Paraform)
+        { id: 'my-jobs', title: 'My Jobs', href: '/my-jobs' },
+        { id: 'candidates', title: 'Candidates', href: '/candidates' },
+        { id: 'contacts', title: 'Contacts', href: '/contacts' },
+        { id: 'settings', title: 'Settings', href: '/settings' },
+      ]
+    
+    case 'employer_recruiter':
+      return [
+        { id: 'dashboard', title: 'Dashboard', href: '/dashboard' },
+        { id: 'jobs', title: 'Jobs', href: '/jobs' },
+        { id: 'candidates', title: 'Candidates', href: '/candidates' },
+        { id: 'agencies', title: 'Agencies', href: '/agencies' },
+        { id: 'interviews', title: 'Interviews', href: '/interviews' },
+        { id: 'settings', title: 'Settings', href: '/settings' },
+      ]
+    
+    default:
+      return []
+  }
 }

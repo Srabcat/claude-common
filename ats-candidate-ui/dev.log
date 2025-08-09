@@ -52,3 +52,11 @@ Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
  GET /dashboard 404 in 60ms
  ⚠ Unsupported metadata viewport is configured in metadata export in /candidates. Please move it to viewport export instead.
 Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ✓ Compiled in 1055ms (795 modules)
+ ✓ Compiled in 686ms (781 modules)
+ ✓ Compiled in 403ms (409 modules)
+ ✓ Compiled in 619ms (795 modules)
+ ✓ Compiled in 491ms (795 modules)
+ ✓ Compiled in 811ms (797 modules)
+ ✓ Compiled in 1109ms (797 modules)
+ ✓ Compiled in 524ms (797 modules)

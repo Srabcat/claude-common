@@ -117,8 +117,8 @@ export function CandidateTable({
               <th className="text-left p-4">
                 <SortButton field="status">Status</SortButton>
               </th>
-              <th className="text-left p-4">Job / Current Stage</th>
-              <th className="text-left p-4">AI Matches</th>
+              <th className="text-left p-4">Current Stage</th>
+              <th className="text-left p-4">Job Matches</th>
               <th className="text-left p-4">
                 <SortButton field="addedAt">Added At</SortButton>
               </th>
@@ -180,16 +180,26 @@ export function CandidateTable({
                 </td>
                 <td className="p-4">
                   <div className="space-y-1">
-                    <div className="text-sm font-medium">Software Engineer</div>
-                    <div className="text-xs text-muted-foreground">Sourced</div>
+                    <div className="text-sm font-medium">
+                      {candidate.status === 'hired' ? 'Hired' : 
+                       candidate.status === 'offered' ? 'Offer Extended' :
+                       candidate.status === 'interviewing' ? 'Interviewing' :
+                       candidate.status === 'contacted' ? 'Initial Contact' : 'Sourced'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {candidate.status === 'hired' ? 'Position filled' :
+                       candidate.status === 'offered' ? 'Awaiting response' :
+                       candidate.status === 'interviewing' ? 'In interview process' :
+                       candidate.status === 'contacted' ? 'Responded to outreach' : 'Added to pipeline'}
+                    </div>
                   </div>
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-1">
-                    <div className="text-sm font-medium">
+                    <div className="text-sm font-medium text-blue-600">
                       {Math.floor(Math.random() * 5) + 1}
                     </div>
-                    <div className="text-xs text-muted-foreground">matches</div>
+                    <div className="text-xs text-muted-foreground">open roles</div>
                   </div>
                 </td>
                 <td className="p-4">

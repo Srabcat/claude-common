@@ -14,6 +14,7 @@ import {
 import { CandidateTable } from '@/components/candidates/candidate-table'
 import { CandidateFilters } from '@/components/candidates/candidate-filters'
 import { AddCandidateForm } from '@/components/candidates/add-candidate-form'
+import { CandidateSecondaryNav } from '@/components/candidates/candidate-secondary-nav'
 import { mockCandidates } from '@/lib/mock-data'
 import { Candidate, SearchFilters, AddCandidateData } from '@/types'
 import { cn, generateId } from '@/lib/utils'
@@ -28,6 +29,7 @@ export default function CandidatesPage() {
   const [showAddForm, setShowAddForm] = React.useState(false)
   const [sortField, setSortField] = React.useState<SortField>('addedAt')
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('desc')
+  const [activeSecondaryTab, setActiveSecondaryTab] = React.useState('all')
   const [filters, setFilters] = React.useState<SearchFilters>({
     query: '',
     status: undefined,
@@ -140,9 +142,6 @@ export default function CandidatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Candidates</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your talent pool and track candidate progress
-          </p>
         </div>
         
         <div className="flex items-center gap-2">
@@ -194,6 +193,12 @@ export default function CandidatesPage() {
           </Button>
         </div>
       </div>
+
+      {/* Secondary Navigation (like Paraform) */}
+      <CandidateSecondaryNav
+        activeTab={activeSecondaryTab}
+        onTabChange={setActiveSecondaryTab}
+      />
 
       {/* Filters */}
       <CandidateFilters
