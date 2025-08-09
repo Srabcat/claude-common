@@ -1,10 +1,43 @@
 # Complex Project: Research & Planning Phase
-**Date:** 2025-01-08  
+**Last Update Date:** 2025-08-08  
 **Phase:** Research & Discovery  
 **Status:** In Progress  
 
 ---
+## 2025-08-08 SIMPLIFIED GOALS - CANDIDATE-FIRST APPROACH 🎯
 
+**FOCUS**: Start with candidate entity only (much simpler than full marketplace)
+
+### Today's Implementation Plan:
+1. **Candidate Schema Design** - Simple candidate table with recruiter relationship
+2. **Basic Navigation** - Platform admin view with candidate add/view functionality  
+3. **Recruiter Assignment** - Link candidates to recruiting user (agency recruiter, platform, or employer)
+
+### Core Data Model (Simplified):
+```
+Candidate:
+- candidate_id (primary key)
+- recruiter_user_id (foreign key to Users table) 
+- basic_attributes (name, email, phone, etc.)
+```
+
+### Terminology Update:
+- **"Agency Recruiter"** = user from agency partner (replaces generic "recruiter")
+- **Recruiter Types**: Agency Recruiter, Platform Recruiter, Employer Recruiter
+
+---
+
+## DEFERRED TO LATER (Too Complex for MVP):
+- Job submissions workflow
+- Multi-sided marketplace features
+- Complete data structure design for complex candidate data
+- PostgreSQL multi-tenant configuration  
+- Role hierarchy and complex access control 
+
+
+
+
+---
 ## Project Overview
 **PRODUCT VISION:** AI-powered recruiting marketplace + ATS that automates repetitive tasks and uses voice commands/agents to streamline workflows across three user personas.
 
@@ -15,28 +48,70 @@
 
 ---
 
-## COMPETITIVE RESEARCH COMPLETE ✅
+## RESEARCH FILES & DOCUMENTATION ✅
 
-### Recruiting Agency Tools Research
-**Analyzed:** Bullhorn, Crelate, Invenias, Clockwork, Thrive TRM
-- Table stakes features identified for candidate management and pipeline tracking
-- Advanced features like email automation and CRM capabilities mapped
-- Key pain points: 15+ hours/week on manual job posting, 10 hours/week on interview coordination
-- AI opportunities: Voice commands, automated sourcing, smart data entry
+### File Tracking System
+**Purpose**: Prevent duplicate information - UPDATE existing files with today's date stamps in the file name, don't create new ones
 
-### Employer ATS Research  
-**Analyzed:** Greenhouse, Ashby
-- Core hiring workflow features from job posting through offer management
-- Advanced analytics and integration capabilities documented
-- Major pain points: Complex navigation, scheduling nightmares, buried information
-- AI opportunities: Resume screening, interview question generation, voice-powered status updates
+| File Name | Purpose | Last Updated | Status |
+|-----------|---------|--------------|--------|
+| `2025-08-07-ATS-consolidated-research-claude-manus.md` | **MASTER RESEARCH SUMMARY** - All competitive findings | 2025-08-07 | ✅ Complete |
+| `2025-08-07-ATS-pain-points-reference.md` | Pain points with sources - reference only | 2025-08-07 | ✅ Complete |
+| `2025-08-07-ATS-claude-independent-UI-research.md` | Visual UI research - 8 platforms analyzed | 2025-08-07 | ✅ Complete |
+| `2025-08-07-ATS-claude-vs-manus-navigation-comparison.md` | Research validation - conflicts documented | 2025-08-07 | ✅ Complete |
+| `2025-08-07-ATS-navigation-design-final.md` | **FINAL NAVIGATION SPEC** - Implementation ready | 2025-08-07 | ✅ Complete |
+| `2025-08-07-ATS-marketplace-mvp-roadmap.md` | Feature prioritization and roadmap | 2025-08-07 | ✅ Complete |
+| `2025-08-08-ATS-terminology-research.md` | Platform terminology (employer, submittal, lifecycle) | 2025-08-08 | ✅ Complete |
+| `planning/database-schema/candidate-submissions-schema.md` | Database schema for candidate submissions workflow | 2025-08-08 | ✅ Complete |
+| `planning/database-schema/gpt-discussion-notes.md` | Database design discussion notes | 2025-08-08 | ✅ Complete |
+| `planning/database-schema/2025-08-08-ATS-user-candidate-schema-design.md` | **MAIN SCHEMA DESIGN** - Users, organizations, candidates with flexible access control | 2025-08-08 | ✅ Complete |
+| `planning/frontend-architecture/2025-08-08-ATS-flexible-layout-technical-design.md` | **FRONTEND TECHNICAL DESIGN** - Flexible layout architecture | 2025-08-08 | ✅ Complete |
+| `planning/frontend-architecture/2025-08-08-ATS-engineering-design-decisions.md` | Engineering standards and anti-patterns documentation | 2025-08-08 | ✅ Complete |
 
-### Marketplace Platform Research
-**Analyzed:** Bounty Jobs, Paraform, Hired.com/LHH
-- Platform administration and two-sided marketplace management
-- Quality control, dispute resolution, and payment processing workflows
-- Admin pain points: 13 hours/week candidate screening, manual dispute resolution
-- AI opportunities: Proactive issue detection, automated compliance monitoring
+**REFERENCE FILES** (good examples, may reference later):
+- `2025-08-07-ATS-manus-research-input.md` - Comprehensive navigation analysis with competitive breakdown
+- `2025-08-07-ATS-claude-navigation-design-v1.md` - Initial design hypothesis before research validation
+
+**RULE**: Before creating any new file, check if existing file can be updated with new date stamp
+
+---
+
+## CURRENT SCOPE - PHASE 1 MVP ⚡ DESIGNING NOW
+
+### 1. ENTITY TERMINOLOGY 🎯 IN PROGRESS
+- **Top-Level Entities**: Candidate, Agency Recruiter, Employer, Job, Submittals, Users
+- **Database Schema Design** - **PENDING - CRITICAL**
+- **User Table Structure** - **PENDING - ONE vs MULTIPLE TABLES?**
+
+### 2. CANDIDATE-FIRST IMPLEMENTATION ✅ 
+- **Simple Candidate Schema** with agency_recruiter_id
+- **Platform Admin View** - add/view candidates
+- **Basic CRUD Operations** - start here, expand later
+
+---
+
+## REFERENCE SECTION 📚
+
+### Research & Analysis (Completed - For Reference)
+- **Competitive Pain Points** (validated through 15+ platforms) - `2025-08-07-ATS-consolidated-research-claude-manus.md`
+- **UI Navigation Research** (8 platforms visual analysis) - `2025-08-07-ATS-claude-independent-UI-research.md`
+- **Navigation Design** (implementation-ready) - `2025-08-07-ATS-navigation-design-final.md`
+- **Table Stakes vs Advanced Features** - `2025-08-07-ATS-marketplace-mvp-roadmap.md`
+
+---
+
+## FUTURE PHASES - TO DO LATER 📋
+
+### Phase 2 - Advanced Features (OUT OF CURRENT SCOPE)
+- **Mobile-First Responsive Strategy** - TO DO
+- **Integration Requirements** (calendar, email, payment) - TO DO  
+- **Advanced UI Design** (beyond navigation) - TO DO
+- **AI Enhancement Implementation** - TO DO
+
+### Phase 3 - System Architecture (OUT OF CURRENT SCOPE)
+- **Multi-sided Marketplace** - TO DO
+- **Complex Access Control** - TO DO
+- **Technical Architecture** - TO DO
 
 ---
 
