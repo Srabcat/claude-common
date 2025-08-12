@@ -1,5 +1,17 @@
 Requirements Summary
 
+
+⏺ Duplicate Detection Requirements Recap
+
+	•	Detect and maintain one canonical record per one candidate (deduplication) - always
+	•	Track every submission to the canonical candidate, linked to recruiter and agency, and across all agencies - often (10% of candidates)
+  - Each duplicate can store its own copy of reality that maybe different across recruiters.
+	•	Flag real-time duplicates and submission conflicts at creation, submission, or attribute edits.
+	•	Keep history of identifier changes (email, phone).
+	•	Give visibility into duplicates and conflicts for recruiters, agencies, and platform
+
+  -----------------------------
+
 #### Unique Attributes
 - **Primary IDs**: Email and phone number 
 - **Additional IDs**: LinkedIn, GitHub URL (for simplicity, ignore them for now).

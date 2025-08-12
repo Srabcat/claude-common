@@ -1,15 +1,44 @@
-### Recap of SQL Database Design Best Practices (2025)
+# Database Schema Design Best Practices (2025)
+
+## 🚨 CRITICAL RULE #1: NEVER CREATE UNNECESSARY TABLES
+
+### **The Table Creation Test**
+Before creating ANY new table, ask these questions **in order**:
+
+1. **"Can the existing table handle this with just additional columns?"**
+2. **"What specific functional problem does a separate table solve?"** 
+3. **"If my answer is 'organization', 'separation of concerns', or 'cleaner design' - STOP. These are not functional problems."**
+
+### **NEVER Create Tables For:**
+- ❌ **History tracking** when status flags work (use `status='active'/'superseded'` pattern)
+- ❌ **Audit trails** when JSONB fields work (use `change_history` JSONB column)
+- ❌ **"Clean architecture"** or **"separation of concerns"** 
+- ❌ **"Future flexibility"** or hypothetical needs
+- ❌ **Small lookup lists** that should be CHECK constraints
+
+### **ONLY Create Tables For:**
+- ✅ **True 1:many or many:many relationships** (can't be flattened)
+- ✅ **Performance isolation** (separate large BLOB data)
+- ✅ **Different access patterns** (frequently vs rarely queried)
+- ✅ **Security isolation** (different permission requirements)
+
+**Remember: Every additional table is technical debt until proven otherwise.**
+
+---
+
+## Standard SQL Best Practices
 
 1. **Foreign Key Naming**: Use `_id` suffix (e.g., `user_id`).
 2. **Naming Conventions**: Use snake_case for table and column names.
 3. **Timestamps**: Include `created_at` and `updated_at` columns.
 4. **Indexes**: Add indexes on foreign keys and frequently queried fields.
-5. **Normalization**: Normalize until it hurts, then denormalize where it’s worth it.
+5. **Normalization**: Normalize until it hurts, then denormalize where it's worth it.
 6. **Meaningful Names**: Use descriptive table and column names.
 7. **Constraints and Defaults**: Define constraints and default values clearly.
 8. **Data Types**: Choose appropriate data types.
 9. **Documentation**: Document your schema.
 10. **Query Optimization**: Regularly review and optimize queries.
+11. **Check Existing Schema**: Always check `/Users/april/10x10-Repos/claude-common/docs/Roadmap/F-Cando/consolidated-ats-schema.sql` before designing new tables.
 
 ### Normalization (1NF-4NF) Explained with Examples
 
@@ -75,6 +104,111 @@ Normalization is the process of organizing data in a database to reduce redundan
 - **4NF**: Achieve 3NF, no multi-valued dependencies.
 
 Normalization helps reduce redundancy and improve data integrity, but it should be balanced with performance considerations.
+
+---
+
+## 🚨 REAL EXAMPLES: Table Creation Mistakes to Avoid
+
+### ❌ MISTAKE: Creating History Tables When Status Flags Work
+
+**What I Did Wrong:**
+```sql
+-- DON'T DO THIS - Unnecessary PersonAliasHistory table
+CREATE TABLE PersonAliasHistory (
+    id UUID PRIMARY KEY,
+    person_alias_id UUID,
+    change_type VARCHAR(20),
+    old_value VARCHAR(500),
+    new_value VARCHAR(500),
+    changed_at TIMESTAMP,
+    changed_by_submission_id UUID
+);
+```
+
+**Why It's Wrong:**
+- ❌ Zero functional benefit over existing table + status flags
+- ❌ Additional joins for every history query
+- ❌ More complex code to maintain
+- ❌ More potential bugs
+
+**✅ CORRECT Solution - Use Existing Table:**
+```sql
+-- Use existing person_identifier table with status pattern
+ALTER TABLE person_identifier ADD COLUMN status VARCHAR(20) DEFAULT 'active' 
+CHECK (status IN ('active', 'superseded', 'deleted'));
+
+ALTER TABLE person_identifier ADD COLUMN superseded_by_identifier_id UUID 
+REFERENCES person_identifier(identifier_id);
+
+-- When email changes:
+-- 1. Old record: UPDATE status = 'superseded', superseded_by_identifier_id = new_id
+-- 2. New record: INSERT with status = 'active'
+-- Query current: WHERE status = 'active'
+-- Query history: WHERE person_id = ? ORDER BY created_at
+```
+
+### ❌ MISTAKE: Creating Separate Tables for "Organization"
+
+**What I Did Wrong:**
+```sql
+-- DON'T DO THIS - Separating data just for "clean design"
+CREATE TABLE Person (...);           -- Canonical person
+CREATE TABLE PersonAlias (...);      -- Identifiers  
+CREATE TABLE Submission (...);       -- Recruiter submissions
+CREATE TABLE Representation (...);   -- Time-bound representation
+CREATE TABLE ConflictDetection (...); -- Conflict tracking
+CREATE TABLE DuplicateDetectionLog (...); -- Audit log
+```
+
+**Why It's Wrong:**
+- ❌ 7 tables when existing schema already had the functionality
+- ❌ "Separation of concerns" is not a functional requirement
+- ❌ Ignored existing `person_identifier`, `candidate_submission`, `candidate_representation` tables
+
+**✅ CORRECT Solution - Enhance Existing:**
+```sql
+-- Use existing tables, add missing functionality:
+-- ✅ person_identifier (already exists) - handles PersonAlias
+-- ✅ candidate_submission (already exists) - handles Submission  
+-- ✅ candidate_representation (already exists) - handles Representation
+-- ✅ duplicate_conflict (already exists) - handles ConflictDetection
+
+-- Just add missing fields to existing tables:
+ALTER TABLE person_identifier ADD COLUMN status VARCHAR(20) DEFAULT 'active';
+ALTER TABLE candidate_submission ADD COLUMN duplicate_reason TEXT;
+ALTER TABLE candidate_representation ADD COLUMN conflict_resolution_notes TEXT;
+```
+
+### ❌ MISTAKE: Creating Config Tables for Small Lists
+
+**What I Did Wrong:**
+```sql
+-- DON'T DO THIS for small, stable lists
+CREATE TABLE conflict_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50)
+);
+INSERT INTO conflict_types VALUES 
+(1, 'duplicate_candidate'), 
+(2, 'representation_conflict'),
+(3, 'attribute_mismatch');
+```
+
+**✅ CORRECT Solution - CHECK Constraints:**
+```sql
+-- Use CHECK constraints for small, stable lists
+ALTER TABLE duplicate_conflict ADD COLUMN conflict_type VARCHAR(30) 
+CHECK (conflict_type IN ('duplicate_candidate', 'representation_conflict', 'attribute_mismatch'));
+```
+
+### The Pattern: Always Ask "Why Not Enhance Existing?"
+
+**Before creating any table, prove these statements:**
+1. **"Existing table X cannot handle this because [specific technical limitation]"**
+2. **"The functional requirement is [specific behavior] that requires separate storage"**
+3. **"Adding columns to existing table would cause [specific performance/security problem]"**
+
+**If you can't prove all three - don't create the table.**
 
 ---
 

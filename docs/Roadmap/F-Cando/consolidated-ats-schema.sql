@@ -117,6 +117,7 @@ CREATE TABLE person (
 
 -- Identity resolution table for duplicate detection
 -- Stores all unique identifiers (email, phone, LinkedIn, GitHub) linked to persons
+-- UPDATED: Added history tracking for duplicate detection
 CREATE TABLE person_identifier (
     identifier_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     person_id UUID NOT NULL REFERENCES person(person_id),
@@ -126,6 +127,13 @@ CREATE TABLE person_identifier (
     is_verified BOOLEAN DEFAULT FALSE,  -- Has this been verified?
     tenant_id INTEGER NOT NULL REFERENCES teams(id), -- Tenant isolation
     
+    -- History tracking for duplicate detection (Requirement #4)
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'superseded', 'deleted')),
+    superseded_by_identifier_id UUID REFERENCES person_identifier(identifier_id),
+    change_reason TEXT,                 -- Why this identifier changed
+    changed_by_person_id UUID REFERENCES person(person_id), -- Who made the change
+    changed_by_table_type VARCHAR(20) CHECK (changed_by_table_type IN ('candidate', 'agency_recruiter', 'person')),
+    
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     deleted_at TIMESTAMP,
@@ -133,7 +141,8 @@ CREATE TABLE person_identifier (
     UNIQUE(identifier_type, identifier_value, tenant_id), -- No duplicate emails within tenant
     INDEX idx_identifier_lookup (identifier_type, identifier_value), -- Fast duplicate detection
     INDEX idx_identifier_person (person_id),
-    INDEX idx_identifier_tenant (tenant_id)
+    INDEX idx_identifier_tenant (tenant_id),
+    INDEX idx_identifier_status (status) WHERE status = 'active' -- Performance for active identifiers
 );
 
 -- =============================================================================
@@ -205,8 +214,10 @@ CREATE TABLE user_organization_assignment (
 -- =============================================================================
 
 -- Candidate extension of person table (person_type = 'candidate' only)
+-- UPDATED: Composite key to support multiple recruiters per candidate
 CREATE TABLE candidate (
-    person_id UUID PRIMARY KEY REFERENCES person(person_id),
+    person_id UUID NOT NULL REFERENCES person(person_id),
+    recruiter_person_id UUID NOT NULL REFERENCES person(person_id),
     
     -- Professional details
     years_experience DECIMAL(4,1),      -- 5.5 years precision
@@ -239,36 +250,55 @@ CREATE TABLE candidate (
     general_notes TEXT,                -- General recruiter notes
     
     created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    updated_at TIMESTAMP DEFAULT NOW(),
+    
+    -- Composite primary key: one candidate record per (person, recruiter) combination
+    PRIMARY KEY (person_id, recruiter_person_id),
+    
+    -- Constraints
+    CHECK (
+        -- Ensure recruiter is actually a recruiter type
+        EXISTS (SELECT 1 FROM person WHERE person_id = recruiter_person_id AND person_type IN ('agency_recruiter', 'platform'))
+    ),
+    CHECK (
+        -- Ensure candidate person is actually a candidate type  
+        EXISTS (SELECT 1 FROM person WHERE person_id = candidate.person_id AND person_type = 'candidate')
+    )
 );
 
 -- Candidate skills (many-to-many)
 CREATE TABLE candidate_skill (
-    person_id UUID NOT NULL REFERENCES candidate(person_id) ON DELETE CASCADE,
+    person_id UUID NOT NULL,
+    recruiter_person_id UUID NOT NULL,
     skill_id INTEGER NOT NULL REFERENCES skill(skill_id),
     proficiency_level VARCHAR(20) CHECK (proficiency_level IN ('beginner', 'intermediate', 'advanced', 'expert')),
     created_at TIMESTAMP DEFAULT NOW(),
-    PRIMARY KEY (person_id, skill_id)
+    PRIMARY KEY (person_id, recruiter_person_id, skill_id),
+    FOREIGN KEY (person_id, recruiter_person_id) REFERENCES candidate(person_id, recruiter_person_id) ON DELETE CASCADE
 );
 
 -- Desired work locations for candidates
 CREATE TABLE candidate_work_location (
     location_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id UUID NOT NULL REFERENCES candidate(person_id) ON DELETE CASCADE,
+    person_id UUID NOT NULL,
+    recruiter_person_id UUID NOT NULL,
     city_id INTEGER NOT NULL REFERENCES city(city_id),
     location_notes TEXT,               -- "Moving here in 2 months"
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (person_id, recruiter_person_id) REFERENCES candidate(person_id, recruiter_person_id) ON DELETE CASCADE
 );
 
 -- Work authorization status (supports multiple countries)
 CREATE TABLE candidate_work_authorization (
     auth_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id UUID NOT NULL REFERENCES candidate(person_id) ON DELETE CASCADE,
+    person_id UUID NOT NULL,
+    recruiter_person_id UUID NOT NULL,
     country_code CHAR(2) NOT NULL,     -- ISO 3166-1 (stored as constants)
     status VARCHAR(100) NOT NULL,      -- 'Citizen', 'Green Card', 'H1B', 'Requires Sponsorship'
     expires_at DATE,                   -- NULL for permanent status
     notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (person_id, recruiter_person_id) REFERENCES candidate(person_id, recruiter_person_id) ON DELETE CASCADE
 );
 
 -- =============================================================================
@@ -338,7 +368,7 @@ CREATE TABLE person_note (
 -- Immutable log for audit trail and duplicate detection
 CREATE TABLE candidate_submission (
     submission_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id UUID NOT NULL REFERENCES person(person_id), -- The candidate
+    person_id UUID NOT NULL REFERENCES person(person_id), -- The candidate 
     recruiter_person_id UUID NOT NULL REFERENCES person(person_id), -- Recruiter who submitted
     employer_tenant_id INTEGER NOT NULL REFERENCES teams(id), -- Which employer received submission
     job_reference VARCHAR(255),        -- Job ID, job title, or other reference
@@ -349,12 +379,12 @@ CREATE TABLE candidate_submission (
     submission_notes TEXT,             -- Any notes from recruiter
     
     submitted_at TIMESTAMP DEFAULT NOW(),
-    created_by UUID,                   -- User who made submission
+    -- created_by UUID,                   -- User who made submission
     
     -- Admin can modify status but not core submission data
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'withdrawn', 'duplicate', 'invalid')),
-    admin_notes TEXT,                  -- Admin override notes
-    modified_by UUID,                  -- Admin who modified
+    -- status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'withdrawn', 'duplicate', 'invalid')),
+    -- admin_notes TEXT,                  -- Admin override notes
+    -- modified_by UUID,                  -- Admin who modified
     modified_at TIMESTAMP,
     
     INDEX idx_submission_candidate (person_id),
@@ -530,6 +560,95 @@ CREATE INDEX idx_representation_employer_active ON candidate_representation(empl
 -- Continue for all tenant-aware tables...
 
 -- =============================================================================
+-- DUPLICATE DETECTION TRIGGERS (Candidate Duplicate Detection - PHASE 2)
+-- =============================================================================
+
+-- Function to detect duplicate candidates when identifiers are added/changed
+CREATE OR REPLACE FUNCTION detect_duplicate_candidate()
+RETURNS TRIGGER AS $$
+DECLARE
+    existing_person_id UUID;
+    conflict_exists BOOLEAN;
+    current_tenant_id INTEGER;
+BEGIN
+    -- Get tenant for the person
+    SELECT tenant_id INTO current_tenant_id 
+    FROM person WHERE person_id = NEW.person_id;
+    
+    -- Check for existing person with same identifier value within tenant
+    SELECT DISTINCT pi.person_id INTO existing_person_id
+    FROM person_identifier pi
+    JOIN person p ON pi.person_id = p.person_id
+    WHERE pi.identifier_value = NEW.identifier_value
+    AND pi.identifier_type = NEW.identifier_type
+    AND pi.status = 'active'
+    AND p.tenant_id = current_tenant_id
+    AND pi.person_id != NEW.person_id;
+    
+    IF existing_person_id IS NOT NULL THEN
+        -- Check if conflict already exists
+        SELECT EXISTS(
+            SELECT 1 FROM duplicate_conflict 
+            WHERE (person_id_1 = NEW.person_id AND person_id_2 = existing_person_id)
+            OR (person_id_1 = existing_person_id AND person_id_2 = NEW.person_id)
+            AND status = 'pending'
+        ) INTO conflict_exists;
+        
+        IF NOT conflict_exists THEN
+            -- Create conflict record for admin review
+            INSERT INTO duplicate_conflict (
+                person_id_1, person_id_2, 
+                conflict_type, confidence_score,
+                employer_tenant_id
+            ) VALUES (
+                NEW.person_id, existing_person_id,
+                CASE NEW.identifier_type 
+                    WHEN 'email' THEN 'email_match'
+                    WHEN 'phone' THEN 'phone_match'
+                    ELSE 'identifier_match'
+                END,
+                0.95,
+                current_tenant_id
+            );
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for duplicate detection on identifier changes
+CREATE TRIGGER trigger_detect_duplicate_candidate
+    AFTER INSERT OR UPDATE ON person_identifier
+    FOR EACH ROW
+    WHEN (NEW.status = 'active')
+    EXECUTE FUNCTION detect_duplicate_candidate();
+
+-- Function to track identifier history when changes occur
+CREATE OR REPLACE FUNCTION track_identifier_history()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Only track when identifier value actually changes
+    IF TG_OP = 'UPDATE' AND OLD.identifier_value != NEW.identifier_value THEN
+        -- Mark old identifier as superseded
+        UPDATE person_identifier 
+        SET status = 'superseded',
+            superseded_by_identifier_id = NEW.identifier_id,
+            updated_at = NOW()
+        WHERE identifier_id = OLD.identifier_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for identifier history tracking
+CREATE TRIGGER trigger_track_identifier_history
+    BEFORE UPDATE ON person_identifier
+    FOR EACH ROW
+    EXECUTE FUNCTION track_identifier_history();
+
+-- =============================================================================
 -- SAMPLE DATA SETUP (Development Only)
 -- =============================================================================
 -- NOTE: Remove in production, useful for testing
@@ -561,6 +680,11 @@ CREATE INDEX idx_representation_employer_active ON candidate_representation(empl
 -- 7. Implement duplicate detection triggers on candidate submission
 -- 8. Add UI for admin conflict resolution workflows
 --
--- PHASE 1 MVP: Basic multi-tenant with person model, no duplicate detection
--- PHASE 2: Add duplicate detection, representation tracking, conflict resolution  
+-- PHASE 1 MVP: Basic multi-tenant with person model ✅ COMPLETE
+-- PHASE 2A: Candidate duplicate detection ✅ COMPLETE (2025-08-12)
+--   - Composite key candidate table (person_id, recruiter_person_id)
+--   - person_identifier history tracking with status fields
+--   - Automatic duplicate detection triggers
+--   - Admin conflict resolution via duplicate_conflict table
+-- PHASE 2B: Submission conflict detection (TODO - next phase)
 -- PHASE 3: Advanced permissions, cross-tenant features if needed
