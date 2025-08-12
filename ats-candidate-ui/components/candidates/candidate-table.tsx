@@ -98,6 +98,140 @@ export function CandidateTable({
     </Button>
   )
 
+  const CandidateRow = ({ 
+    candidate, 
+    isSelected, 
+    onSelect 
+  }: { 
+    candidate: Candidate
+    isSelected: boolean
+    onSelect: (id: string, checked: boolean) => void
+  }) => {
+    const initials = candidate.name.split(' ').map(n => n[0]).join('')
+    const jobMatches = Math.floor(Math.random() * 5) + 1
+
+    const getStageInfo = (status: string) => {
+      switch (status) {
+        case 'hired': 
+          return { stage: 'Hired', description: 'Position filled' }
+        case 'offered': 
+          return { stage: 'Offer Extended', description: 'Awaiting response' }
+        case 'interviewing': 
+          return { stage: 'Interviewing', description: 'In interview process' }
+        case 'contacted': 
+          return { stage: 'Initial Contact', description: 'Responded to outreach' }
+        default: 
+          return { stage: 'Sourced', description: 'Added to pipeline' }
+      }
+    }
+
+    const stageInfo = getStageInfo(candidate.status)
+
+    return (
+      <tr
+        className={cn(
+          'border-b hover:bg-muted/25 transition-colors cursor-pointer',
+          isSelected && 'bg-muted/50'
+        )}
+      >
+        <td className="p-4">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelect(candidate.id, checked as boolean)}
+            aria-label={`Select ${candidate.name}`}
+          />
+        </td>
+        <td className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+              {initials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm truncate">{candidate.name}</div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                {candidate.email && (
+                  <div className="flex items-center gap-1">
+                    <Mail className="h-3 w-3" />
+                    <span className="truncate max-w-[150px]">{candidate.email}</span>
+                  </div>
+                )}
+                {candidate.location && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    <span className="truncate">{candidate.location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            {candidate.linkedinUrl && (
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <ExternalLink className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </td>
+        <td className="p-4">
+          <Badge variant={getStatusVariant(candidate.status)} className="text-xs">
+            {getStatusLabel(candidate.status)}
+          </Badge>
+        </td>
+        <td className="p-4">
+          <div className="space-y-1">
+            <div className="text-sm font-medium">{stageInfo.stage}</div>
+            <div className="text-xs text-muted-foreground">{stageInfo.description}</div>
+          </div>
+        </td>
+        <td className="p-4">
+          <div className="flex items-center gap-1">
+            <div className="text-sm font-medium text-blue-600">{jobMatches}</div>
+            <div className="text-xs text-muted-foreground">open roles</div>
+          </div>
+        </td>
+        <td className="p-4">
+          <div className="text-sm">{formatDateShort(candidate.addedAt)}</div>
+          <div className="text-xs text-muted-foreground">
+            {new Date(candidate.addedAt).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </div>
+        </td>
+        <td className="p-4">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">
+              {candidate.recruiterName.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div className="text-sm font-medium truncate max-w-[100px]">
+              {candidate.recruiterName}
+            </div>
+          </div>
+        </td>
+        <td className="p-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem>View Details</DropdownMenuItem>
+              <DropdownMenuItem>Edit Candidate</DropdownMenuItem>
+              <DropdownMenuItem>Send Message</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Move to Stage</DropdownMenuItem>
+              <DropdownMenuItem>Add to Job</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive">
+                Delete Candidate
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </td>
+      </tr>
+    )
+  }
+
   return (
     <div className={cn('border rounded-lg overflow-hidden', className)}>
       <div className="overflow-x-auto">
@@ -129,121 +263,13 @@ export function CandidateTable({
             </tr>
           </thead>
           <tbody>
-            {candidates.map((candidate, index) => (
-              <tr
+            {candidates.map((candidate) => (
+              <CandidateRow
                 key={candidate.id}
-                className={cn(
-                  'border-b hover:bg-muted/25 transition-colors cursor-pointer',
-                  selectedIds.includes(candidate.id) && 'bg-muted/50'
-                )}
-              >
-                <td className="p-4">
-                  <Checkbox
-                    checked={selectedIds.includes(candidate.id)}
-                    onCheckedChange={(checked) => handleSelectOne(candidate.id, checked as boolean)}
-                    aria-label={`Select ${candidate.name}`}
-                  />
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
-                      {candidate.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-sm truncate">{candidate.name}</div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        {candidate.email && (
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3" />
-                            <span className="truncate max-w-[150px]">{candidate.email}</span>
-                          </div>
-                        )}
-                        {candidate.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            <span className="truncate">{candidate.location}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {candidate.linkedinUrl && (
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4">
-                  <Badge variant={getStatusVariant(candidate.status)} className="text-xs">
-                    {getStatusLabel(candidate.status)}
-                  </Badge>
-                </td>
-                <td className="p-4">
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium">
-                      {candidate.status === 'hired' ? 'Hired' : 
-                       candidate.status === 'offered' ? 'Offer Extended' :
-                       candidate.status === 'interviewing' ? 'Interviewing' :
-                       candidate.status === 'contacted' ? 'Initial Contact' : 'Sourced'}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {candidate.status === 'hired' ? 'Position filled' :
-                       candidate.status === 'offered' ? 'Awaiting response' :
-                       candidate.status === 'interviewing' ? 'In interview process' :
-                       candidate.status === 'contacted' ? 'Responded to outreach' : 'Added to pipeline'}
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-1">
-                    <div className="text-sm font-medium text-blue-600">
-                      {Math.floor(Math.random() * 5) + 1}
-                    </div>
-                    <div className="text-xs text-muted-foreground">open roles</div>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="text-sm">{formatDateShort(candidate.addedAt)}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(candidate.addedAt).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </div>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">
-                      {candidate.recruiterName.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="text-sm font-medium truncate max-w-[100px]">
-                      {candidate.recruiterName}
-                    </div>
-                  </div>
-                </td>
-                <td className="p-4">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Candidate</DropdownMenuItem>
-                      <DropdownMenuItem>Send Message</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem>Move to Stage</DropdownMenuItem>
-                      <DropdownMenuItem>Add to Job</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">
-                        Delete Candidate
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
-              </tr>
+                candidate={candidate}
+                isSelected={selectedIds.includes(candidate.id)}
+                onSelect={handleSelectOne}
+              />
             ))}
           </tbody>
         </table>

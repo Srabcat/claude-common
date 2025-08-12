@@ -3,8 +3,20 @@
 # Post-task hook: Play completion sound after any Claude task finishes
 # This hook runs in the claude-common shared repository
 
-# Play pleasant but noticeable notification sounds
-play_notification() {
+# Check if Claude is waiting for user choice (1, 2, 3)
+is_waiting_for_choice() {
+    # Look for recent output indicating Claude is waiting for user choice
+    # This is a heuristic - adjust patterns as needed
+    if ps aux | grep -q "claude.*code" && [ -t 0 ]; then
+        # Additional checks could be added here to detect waiting state
+        # For now, we'll use a simple approach based on context
+        return 1
+    fi
+    return 1
+}
+
+# Play notification for task completion
+play_completion_sound() {
     if command -v afplay >/dev/null 2>&1; then
         # macOS - Use nicer system sounds at good volume
         # Gentle but noticeable chime sequence
@@ -34,8 +46,48 @@ play_notification() {
     fi
 }
 
-# Run the notification
-play_notification
+# Play distinct "waiting for input" sound
+play_waiting_sound() {
+    if command -v afplay >/dev/null 2>&1; then
+        # macOS - Different sound pattern for waiting
+        # Three ascending tones to indicate "waiting for choice"
+        afplay /System/Library/Sounds/Tink.aiff &
+        sleep 0.2
+        afplay /System/Library/Sounds/Tink.aiff &
+        sleep 0.2  
+        afplay /System/Library/Sounds/Funk.aiff &  # Higher pitched end tone
+        
+    elif command -v play >/dev/null 2>&1; then
+        # Linux SoX - ascending tone pattern
+        play -n synth 0.2 sine 600 vol 0.4 &
+        sleep 0.2
+        play -n synth 0.2 sine 700 vol 0.4 &  
+        sleep 0.2
+        play -n synth 0.3 sine 900 vol 0.5 &
+        
+    else
+        # Fallback: different bell pattern
+        echo -e "\a"
+        sleep 0.3
+        echo -e "\a"
+        sleep 0.3  
+        echo -e "\a"
+    fi
+}
+
+# Detect context and play appropriate sound
+# Check if we can detect Claude waiting for user choice (1, 2, 3)
+# This could be enhanced by checking recent terminal output or process state
+
+# For now, always play completion sound
+# You can manually trigger waiting sound by setting environment variable:
+# CLAUDE_WAITING=1 (in your shell before running Claude Code)
+
+if [ "$CLAUDE_WAITING" = "1" ]; then
+    play_waiting_sound
+else
+    play_completion_sound
+fi
 
 # Optional: Add visual notification for macOS
 if command -v osascript >/dev/null 2>&1; then

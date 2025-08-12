@@ -60,3 +60,558 @@ Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
  ✓ Compiled in 811ms (797 modules)
  ✓ Compiled in 1109ms (797 modules)
  ✓ Compiled in 524ms (797 modules)
+ ✓ Compiled in 945ms (797 modules)
+ ✓ Compiled in 520ms (797 modules)
+ ✓ Compiled in 447ms (797 modules)
+ ✓ Compiled in 471ms (797 modules)
+ ✓ Compiled in 494ms (797 modules)
+ ✓ Compiled in 711ms (783 modules)
+ ✓ Compiled in 510ms (783 modules)
+ ✓ Compiled in 703ms (783 modules)
+ ⨯ ./components/candidates/candidate-table.tsx
+Error: 
+  [31mx[0m Unexpected eof
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:259:1]
+ [2m259[0m |       )}
+ [2m260[0m |     </div>
+ [2m261[0m |   )
+ [2m262[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/candidates/candidate-table.tsx
+./app/candidates/page.tsx
+ ⨯ ./components/candidates/candidate-table.tsx
+Error: 
+  [31mx[0m Unexpected eof
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:263:1]
+ [2m263[0m |       )}
+ [2m264[0m |     </div>
+ [2m265[0m |   )
+ [2m266[0m | }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/candidates/candidate-table.tsx
+./app/candidates/page.tsx
+ ✓ Compiled in 1362ms (797 modules)
+ ✓ Compiled in 739ms (797 modules)
+ ✓ Compiled in 511ms (797 modules)
+ GET /candidates 200 in 559ms
+ ○ Compiling /dashboard ...
+ ⨯ ./app/dashboard/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m [90m 4 |[39m [36mimport[39m { [33mActivity[39m[33m,[39m [33mUsers[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { getCurrentUser } [36mfrom[39m [32m'@/lib/mock-data'[39m[0m
+[0m [90m 8 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m [90m 4 |[39m [36mimport[39m { [33mActivity[39m[33m,[39m [33mUsers[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { getCurrentUser } [36mfrom[39m [32m'@/lib/mock-data'[39m[0m
+[0m [90m 8 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m [90m 4 |[39m [36mimport[39m { [33mActivity[39m[33m,[39m [33mUsers[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { getCurrentUser } [36mfrom[39m [32m'@/lib/mock-data'[39m[0m
+[0m [90m 8 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ GET /dashboard 500 in 22ms
+ ✓ Compiled / in 484ms (436 modules)
+ GET / 500 in 631ms
+ ⨯ ./app/dashboard/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m [90m 4 |[39m [36mimport[39m { [33mActivity[39m[33m,[39m [33mUsers[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { getCurrentUser } [36mfrom[39m [32m'@/lib/mock-data'[39m[0m
+[0m [90m 8 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m [90m 4 |[39m [36mimport[39m { [33mActivity[39m[33m,[39m [33mUsers[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { getCurrentUser } [36mfrom[39m [32m'@/lib/mock-data'[39m[0m
+[0m [90m 8 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ GET / 500 in 217ms
+ ○ Compiling /_not-found ...
+ ⨯ ./app/dashboard/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m [90m 4 |[39m [36mimport[39m { [33mActivity[39m[33m,[39m [33mUsers[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mCalendar[39m[33m,[39m [33mClock[39m } [36mfrom[39m [32m'lucide-react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { getCurrentUser } [36mfrom[39m [32m'@/lib/mock-data'[39m[0m
+[0m [90m 8 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ GET /dashboard 500 in 918ms
+ GET / 500 in 21ms
+ GET / 500 in 13ms
+ GET / 500 in 17ms
+ GET / 500 in 31ms
+ ✓ Compiled /_not-found in 1998ms (1021 modules)
+ GET / 500 in 1615ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /_next/static/webpack/5dad9be2a32e7225.webpack.hot-update.json 404 in 1445ms
+ GET /_next/static/webpack/5dad9be2a32e7225.webpack.hot-update.json 404 in 1456ms
+ GET /dashboard 404 in 155ms
+ GET / 307 in 161ms
+ GET /candidates 200 in 237ms
+ ✓ Compiled in 1095ms (1021 modules)
+ GET /dashboard 404 in 184ms
+ ✓ Compiled in 608ms (1021 modules)
+ GET /dashboard 404 in 178ms
+ GET /jobs 404 in 56ms
+ ⨯ ./components/candidates/candidate-table.tsx
+Error: 
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:294:1]
+ [2m294[0m |       )}
+ [2m295[0m |     </div>
+ [2m296[0m |   )
+ [2m297[0m | })
+     : [31;1m ^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/candidates/candidate-table.tsx
+./app/candidates/page.tsx
+ ⨯ ./components/candidates/candidate-table.tsx
+Error: 
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:290:1]
+ [2m290[0m |       )}
+ [2m291[0m |     </div>
+ [2m292[0m |   )
+ [2m293[0m | })
+     : [31;1m ^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/candidates/candidate-table.tsx
+./app/candidates/page.tsx
+ ⨯ ./components/candidates/candidate-table.tsx
+Error: 
+  [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:230:1]
+ [2m230[0m |         </td>
+ [2m231[0m |       </tr>
+ [2m232[0m |     )
+ [2m233[0m |   })
+     : [31;1m   ^[0m
+ [2m234[0m | 
+ [2m235[0m |   return (
+ [2m236[0m |     <div className={cn('border rounded-lg overflow-hidden', className)}>
+     `----
+
+  [31mx[0m Expression expected
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:285:1]
+ [2m285[0m |       )}
+ [2m286[0m |     </div>
+ [2m287[0m |   )
+ [2m288[0m | })
+     : [31;1m ^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/candidates/candidate-table.tsx
+./app/candidates/page.tsx
+ ⨯ ./components/candidates/candidate-table.tsx
+Error: 
+  [31mx[0m Expected a semicolon
+     ,-[[36;1;4m/Users/april/10x10-Repos/claude-common/ats-candidate-ui/components/candidates/candidate-table.tsx[0m:230:1]
+ [2m230[0m |         </td>
+ [2m231[0m |       </tr>
+ [2m232[0m |     )
+ [2m233[0m |   })
+     : [31;1m   ^[0m
+ [2m234[0m | 
+ [2m235[0m |   return (
+ [2m236[0m |     <div className={cn('border rounded-lg overflow-hidden', className)}>
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/candidates/candidate-table.tsx
+./app/candidates/page.tsx
+ ✓ Compiled in 1384ms (1024 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 943ms (1013 modules)
+ GET /dashboard 404 in 173ms
+ GET /candidates 200 in 254ms
+ ✓ Compiled in 1192ms (1013 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 673ms (1016 modules)
+ ✓ Compiled in 975ms (1016 modules)
+ ✓ Compiled in 516ms (1016 modules)
+ ✓ Compiled in 965ms (1016 modules)
+ ✓ Compiled in 1080ms (1013 modules)
+ GET /candidates 200 in 376ms
+ ○ Compiling /analytics ...
+ ✓ Compiled /_not-found in 1605ms (1018 modules)
+ GET /contacts 404 in 205ms
+ GET /employers 404 in 59ms
+ ✓ Compiled /jobs in 294ms (1020 modules)
+ ✓ Compiled in 963ms (1013 modules)
+ ✓ Compiled in 1690ms (1027 modules)
+ ✓ Compiled in 422ms (1027 modules)
+ GET /candidates 200 in 368ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 705ms (1016 modules)
+ GET /employers 404 in 168ms
+ GET /candidates 200 in 147ms
+ ○ Compiling /jobs ...
+ ✓ Compiled /jobs in 647ms (434 modules)
+ GET /contacts 404 in 209ms
+ GET /candidates 200 in 136ms
+ GET /marketplace 404 in 45ms
+ ✓ Compiled / in 428ms (441 modules)
+ GET /employers 404 in 146ms
+ GET /candidates 200 in 137ms
+ ✓ Compiled in 1077ms (1015 modules)
+ ✓ Compiled in 447ms (1015 modules)
+ ✓ Compiled in 654ms (596 modules)
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ○ Compiling / ...
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./app/dashboard/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/card'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m'react'[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { [33mCard[39m[33m,[39m [33mCardContent[39m[33m,[39m [33mCardDescription[39m[33m,[39m [33mCardHeader[39m[33m,[39m [33mCardTitle[39m } [36mfrom[39m [32m'@/components/ui/card'[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m [36mimport[39m { [33mBadge[39m } [36mfrom[39m [32m'@/components/ui/badge'[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { [33mButton[39m } [36mfrom[39m [32m'@/components/ui/button'[39m[0m
+[0m [90m 7 |[39m [36mimport[39m { [33mProgress[39m } [36mfrom[39m [32m'@/components/ui/progress'[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+ GET / 500 in 1526ms
+ GET / 500 in 18ms
+ GET / 500 in 34ms
+ ⨯ ./components/ui/progress.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-progress'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m"react"[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mProgressPrimitive[39m [36mfrom[39m [32m"@radix-ui/react-progress"[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { cn } [36mfrom[39m [32m"@/lib/utils"[39m[0m
+[0m [90m 7 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/dashboard/page.tsx
+ GET / 500 in 72ms
+ ⨯ ./components/ui/progress.tsx:4:1
+Module not found: Can't resolve '@radix-ui/react-progress'
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mReact[39m [36mfrom[39m [32m"react"[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m [33m*[39m [36mas[39m [33mProgressPrimitive[39m [36mfrom[39m [32m"@radix-ui/react-progress"[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m[0m
+[0m [90m 6 |[39m [36mimport[39m { cn } [36mfrom[39m [32m"@/lib/utils"[39m[0m
+[0m [90m 7 |[39m[0m
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/dashboard/page.tsx
+ ✓ Compiled /_not-found in 1305ms (1058 modules)
+ ✓ Compiled / in 370ms (1069 modules)
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET / 307 in 851ms
+ GET /_next/static/webpack/5dad9be2a32e7225.webpack.hot-update.json 404 in 849ms
+ GET / 307 in 72ms
+ ⨯ Error: Cannot find module './126.js'
+Require stack:
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/app/_not-found/page.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/build/utils.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-middleware.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-reloader-webpack.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/start-server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1140:15)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require-hook.js:55:36
+    at Module._load (node:internal/modules/cjs/loader:981:27)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at mod.require (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require-hook.js:65:28)
+    at require (node:internal/modules/helpers:177:18)
+    at __webpack_require__.f.require (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:203:28)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:111:40
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:110:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:162:22)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/app/candidates/page.js:5:33599
+    at Object.<anonymous> (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/app/candidates/page.js:5:33644)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at mod.require (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require-hook.js:65:28)
+    at require (node:internal/modules/helpers:177:18)
+    at requirePage (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require.js:109:84)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js:103:84
+    at async loadComponentsImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js:103:26)
+    at async DevServer.findPageComponentsImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/next-server.js:714:36)
+    at async DevServer.findPageComponents (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/next-dev-server.js:577:20)
+    at async DevServer.renderPageComponent (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/base-server.js:1910:24)
+    at async DevServer.renderToResponseImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/base-server.js:1962:32)
+    at async DevServer.pipeImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/base-server.js:922:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/base-server.js:818:17)
+    at async /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js:179:21)
+    at async handleRequest (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js:359:24)
+    at async requestHandlerImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js:383:13)
+    at async Server.requestListener (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/start-server.js:141:13) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/app/_not-found/page.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/build/utils.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-middleware.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-reloader-webpack.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/start-server.js'
+  ],
+  page: '/candidates'
+}
+ ⨯ Error: Cannot find module './682.js'
+Require stack:
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/app/_not-found/page.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/build/utils.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-middleware.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-reloader-webpack.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js
+- /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/start-server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1140:15)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require-hook.js:55:36
+    at Module._load (node:internal/modules/cjs/loader:981:27)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at mod.require (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require-hook.js:65:28)
+    at require (node:internal/modules/helpers:177:18)
+    at __webpack_require__.f.require (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:203:28)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:111:40
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:110:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js:162:22)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/pages/_document.js:1:335
+    at Object.<anonymous> (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/pages/_document.js:1:376)
+    at Module._compile (node:internal/modules/cjs/loader:1364:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1422:10)
+    at Module.load (node:internal/modules/cjs/loader:1203:32)
+    at Module._load (node:internal/modules/cjs/loader:1019:12)
+    at Module.require (node:internal/modules/cjs/loader:1231:19)
+    at mod.require (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require-hook.js:65:28)
+    at require (node:internal/modules/helpers:177:18)
+    at requirePage (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require.js:109:84)
+    at /Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js:72:65
+    at async Promise.all (index 0)
+    at async loadComponentsImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js:71:33)
+    at async DevServer.findPageComponentsImpl (/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/next-server.js:714:36) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/webpack-runtime.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/server/app/_not-found/page.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/require.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/load-components.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/build/utils.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-middleware.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/dev/hot-reloader-webpack.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-utils/setup-dev-bundler.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/router-server.js',
+    '/Users/april/10x10-Repos/claude-common/ats-candidate-ui/node_modules/next/dist/server/lib/start-server.js'
+  ]
+}
+ GET /candidates 500 in 71ms
+ GET /_next/static/chunks/fallback/webpack.js 404 in 71ms
+ GET /_next/static/chunks/fallback/main.js 404 in 69ms
+ GET /_next/static/chunks/fallback/react-refresh.js 404 in 69ms
+ GET /_next/static/chunks/fallback/pages/_app.js 404 in 60ms
+ GET /_next/static/chunks/fallback/pages/_error.js 404 in 59ms
+ ✓ Compiled in 604ms (1069 modules)
+ ✓ Compiled in 1015ms (1072 modules)
+ ✓ Compiled in 1067ms (1072 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Restoring pack from /Users/april/10x10-Repos/claude-common/ats-candidate-ui/.next/cache/webpack/client-development.pack.gz failed: TypeError: Cannot read properties of undefined (reading 'hasStartTime')
+ ✓ Compiled in 1323ms (1072 modules)
+ GET /candidates 200 in 490ms

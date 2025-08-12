@@ -37,9 +37,33 @@ export default function CandidatesPage() {
     dateRange: undefined
   })
 
-  // Filter candidates based on search and filters
+  // Filter candidates based on search, filters, and secondary nav tabs
   React.useEffect(() => {
     let filtered = [...candidates]
+
+    // Secondary navigation tab filter
+    if (activeSecondaryTab !== 'all') {
+      switch (activeSecondaryTab) {
+        case 'active':
+          // Active Applications - candidates with contacted, interviewing, or offered status
+          filtered = filtered.filter(candidate => 
+            ['contacted', 'interviewing', 'offered'].includes(candidate.status)
+          )
+          break
+        case 'pipeline':
+          // Interview Pipeline - candidates currently interviewing
+          filtered = filtered.filter(candidate => 
+            candidate.status === 'interviewing'
+          )
+          break
+        case 'calendar':
+          // Interview Calendar - candidates with upcoming interviews (mock logic)
+          filtered = filtered.filter(candidate => 
+            candidate.status === 'interviewing' || candidate.status === 'offered'
+          )
+          break
+      }
+    }
 
     // Search filter
     if (filters.query) {
@@ -90,7 +114,7 @@ export default function CandidatesPage() {
     })
 
     setFilteredCandidates(filtered)
-  }, [candidates, filters, sortField, sortDirection])
+  }, [candidates, filters, sortField, sortDirection, activeSecondaryTab])
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -198,6 +222,7 @@ export default function CandidatesPage() {
       <CandidateSecondaryNav
         activeTab={activeSecondaryTab}
         onTabChange={setActiveSecondaryTab}
+        candidates={candidates}
       />
 
       {/* Filters */}

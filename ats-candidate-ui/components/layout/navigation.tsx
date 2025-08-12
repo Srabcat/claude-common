@@ -44,6 +44,8 @@ export function Navigation({ className }: NavigationProps) {
         return 'secondary' as const
       case 'employer_recruiter':
         return 'outline' as const
+      case 'platform_prototype':
+        return 'destructive' as const
       default:
         return 'outline' as const
     }
@@ -57,6 +59,8 @@ export function Navigation({ className }: NavigationProps) {
         return 'Agency Recruiter'
       case 'employer_recruiter':
         return 'Employer Recruiter'
+      case 'platform_prototype':
+        return 'Platform Prototype'
       default:
         return role
     }
@@ -88,11 +92,6 @@ export function Navigation({ className }: NavigationProps) {
                 )}
               >
                 {item.title}
-                {item.badge && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {item.badge}
-                  </Badge>
-                )}
               </Button>
             </Link>
           ))}

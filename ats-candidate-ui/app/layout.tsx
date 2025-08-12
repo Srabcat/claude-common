@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   description: 'Modern, fast, and intuitive candidate management platform with role-based navigation and advanced filtering.',
   keywords: 'ATS, recruiting, candidates, hiring, talent management',
   authors: [{ name: 'ATS Platform Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -23,10 +27,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider
-          attribute="class"
           defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
         >
           <div className="min-h-screen bg-background">
             <Navigation />

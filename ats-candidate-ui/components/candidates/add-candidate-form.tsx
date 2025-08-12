@@ -119,7 +119,7 @@ export function AddCandidateForm({
     const isValid = await trigger(stepFields)
     
     if (isValid) {
-      setCompletedSteps(prev => new Set([...prev, currentStep]))
+      setCompletedSteps(prev => new Set(Array.from(prev).concat([currentStep])))
     }
     
     return isValid

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Initialize NextSaaS claude integration
+# This command links the universal claude-common repository
+
+echo "🚀 Linking claude-common for NextSaaS..."
+
+# Get the repository root
+REPO_ROOT=$(git rev-parse --show-toplevel)
+CLAUDE_COMMON_PATH="$REPO_ROOT/../claude-common"
+
+# Check if claude-common directory exists
+if [ ! -d "$CLAUDE_COMMON_PATH" ]; then
+    echo "❌ Error: claude-common directory not found at $CLAUDE_COMMON_PATH"
+    exit 1
+fi
+
+echo "📁 Adding universal shared commands and docs: $CLAUDE_COMMON_PATH"
+claude --add-dir "$CLAUDE_COMMON_PATH"
+
+if [ $? -eq 0 ]; then
+    echo "✅ Successfully linked claude-common!"
+    echo "   • Universal shared commands are available"
+    echo "   • Shared documentation available (docs/CopyWriter.md, etc.)"
+    echo "   • Post-task sound hook is enabled"
+    echo "   • NextSaaS-specific commands remain local in this repo"
+    echo ""
+    echo "🎵 Test the setup by running any Claude command - you should hear a completion sound!"
+else
+    echo "❌ Failed to link claude-common directory"
+    exit 1
+fi

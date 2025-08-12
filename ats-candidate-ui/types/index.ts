@@ -1,4 +1,4 @@
-export type UserRole = 'platform_admin' | 'agency_recruiter' | 'employer_recruiter'
+export type UserRole = 'platform_admin' | 'agency_recruiter' | 'employer_recruiter' | 'platform_prototype'
 
 export type CandidateStatus = 'sourced' | 'contacted' | 'interviewing' | 'offered' | 'hired' | 'declined'
 
