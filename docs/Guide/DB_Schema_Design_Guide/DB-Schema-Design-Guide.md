@@ -5,9 +5,20 @@
 ### **The Table Creation Test**
 Before creating ANY new table, ask these questions **in order**:
 
-1. **"Can the existing table handle this with just additional columns?"**
-2. **"What specific functional problem does a separate table solve?"** 
-3. **"If my answer is 'organization', 'separation of concerns', or 'cleaner design' - STOP. These are not functional problems."**
+Before creating any new table, stop and ask — in order:
+	1.	Can the existing table handle this with added columns?
+	•	If yes, do not create a new table.
+	2.	What specific functional requirement cannot be met with added columns?
+	•	Must name a concrete technical limitation or breakage, not a design preference.
+	3.	If I had to use only existing tables + new columns, what would actually fail?
+	•	Describe the exact technical failure.
+	4.	Have I reviewed the existing schema?
+	•	Path: /Users/april/10x10-Repos/claude-common/docs/Roadmap/F-Cando/consolidated-ats-schema.sql
+    5.  Does the data justifiy a DB table or constant or JASON file in code - ask business needs
+
+RULE: If you cannot give specific, technical answers to #2 and #3, you must enhance an existing table instead.
+NOT valid reasons: “Clean architecture,” “separation of concerns,” “different concepts,” or “organization.”
+
 
 ### **Real Examples of Unnecessary Table Creation**
 
@@ -207,6 +218,38 @@ CREATE TABLE person (
 **Not The Goal**: Build the "cleanest" or most "organized" schema
 
 **Every additional table is technical debt until proven otherwise.**
+
+## 🚨 CRITICAL RULE: AVOID DATABASE TRIGGERS
+
+### **Database Triggers Are Startup-Hostile**
+
+**Before creating ANY trigger, ask:**
+1. **"Can this business logic be moved to application layer?"**
+2. **"Will developers understand this logic exists when they see database operations?"**
+3. **"How will I test, debug, and modify this logic as business rules change?"**
+
+### **❌ DON'T Use Triggers For:**
+- **Business logic** (duplicate detection, validation rules, status changes)
+- **Complex data transformations** 
+- **External API calls or notifications**
+- **Workflow orchestration**
+
+### **✅ DO Use Triggers For:**
+- **Simple audit timestamps** (`updated_at = NOW()`)
+- **Critical data integrity** (only when constraints aren't sufficient)
+- **Performance optimizations** (maintaining derived columns)
+
+### **Rule**: If trigger contains IF statements or business rules, move it to application layer.
+
+### **Pattern: Database Constraints as Backup**
+```sql
+-- Application handles duplicate detection logic
+-- Database constraint catches bugs as safety net
+ALTER TABLE person_identifier ADD CONSTRAINT backup_unique_active_identifier 
+UNIQUE(identifier_type, identifier_value, tenant_id) WHERE status = 'active';
+```
+
+**Why**: Constraints fail fast with clear errors. Triggers hide complexity and create invisible side effects.
 
 ## References
 
