@@ -1,0 +1,481 @@
+Decisions and why Reasons:
+- login-user vs non-login-contact table (same vs different) 
+    - a single, unified member_profiles table because the alternative 
+    - separating "contacts" and "users" provides zero real benefits while creating a massive "split identity" problem. The "user" profile table would have needed to handle many different roles with nullable fields anyway, 
+    - creating a separate "contact" table just introduces a painful data fragmentation issue for no reason. 
+    - unified model correctly treats all individuals as evolving profiles within an organization, which is simpler and more robust.
+
+- 3 tables for user type, org types, and identifier types. 
+    - using three separate profile tables because this design provides the best combination of benefits:
+    - establishes clear, logical boundaries for each user persona, which simplifies application code and reduces the risk of bugs where data from one role is misused in another. 
+    - While the database-level NOT NULL argument is not absolute, this separation still offers better data clarity and more targeted data models than a single, cluttered table. 
+
+- extension tables (vs null fields, JASON)
+
+- canonical_person_id table design - We store names in organizational context tables (candidate, agency_user, employer_user, platform_user) rather than a central person table because the same 
+  individual may be known by different names across different organizations - "Bob Smith" to one recruiter, "Robert J. Smith" to another employer, and "Bobby"
+   on their LinkedIn profile. The unique_person_identifier table serves purely as an identity resolution anchor that links contact information (email, phone, 
+  social) to establish that multiple organizational records represent the same human being, without forcing a canonical name choice. This design preserves 
+  data accuracy by storing names as each organization actually knows them, while maintaining duplicate detection capabilities through the shared identifier 
+  system.
+
+- user_login_auth table naming - Renamed from "users" to "user_login_auth" because this table only handles authentication, not user data. All actual user data (names, settings, organizational context) is stored in the organizational role tables (agency_user, employer_user, platform_user) and candidate table. The user_login_auth table uses a UNIQUE constraint on the login credential to physically guarantee a single, unambiguous record for each user's identity, essential for critical actions like password reset without data corruption or security flaws. 
+
+"Decoupled Synchronization." The login email should be duplicated in the person_emails table, but not through a direct database constraint. The application logic is responsible for keeping them aligned.
+⸻
+
+
+⸻
+
+
+
+2. Person/Profile/Contact Tables Explanation
+	1.	person – canonical record for a unique human being. Deduplication across all system interactions.
+	2.	Profile Tables (organization-specific roles):
+	•	candidate_profile – candidate-specific data/settings linked to person.
+	•	agency_user – agency user data/settings or login.
+	•	employer_user – employer-side user data/settings or login.
+	•	platform_user – platform admin/coordinator data/settings or login.
+	3.	organization_member – tracks membership relationships between people and organizations.
+	4.	prospect tables – inbound candidate/employer data not yet converted into canonical person or profiles.
+
+Rationale:
+	•	Separates canonical identity (person) from org-specific roles/profiles.
+	•	Supports multi-tenant isolation.
+	•	Enables deduplication across multiple representations of the same person.
+	•	Keeps staging/prospect data distinct from operational data.
+
+⸻
+
+
+-----
+
+
+The ID System for Model A (Separate Profiles)
+In this model, we have three main "people" concepts, and each has a distinct ID.
+### Key Concepts
+
+1. **person_id**
+   - **Source Table**: persons
+   - **Definition**: A globally unique ID representing a canonical human being.
+   - **Purpose**: Deduplication and linking all activities to a single identity.
+   - **Example**: person-123 is Jane Doe.
+
+2. **user_id**
+   - **Source Table**: users
+   - **Definition**: An ID representing a person's login for a specific organization.
+   - **Purpose**: Managing logins and sessions, linking to authentication credentials.
+   - **Example**: user-abc is Jane Doe's login for Agency A; user-xyz is her login for Employer B. Both link back to person-123.
+
+3. **Profile ID**
+   - **Source Tables**: agency_user_profiles, employer_user_profiles, etc.
+   - **Definition**: A unique ID for a specific profile record within the org.
+   - **Purpose**: Uniquely identifying a single row in the profile table. Essential for multiple profiles per person.
+   - **Example**: agency-profile-777 is Jane's job at Agency A; agency-profile-888 is her job at Agency B.
+
+### Database Design Principles
+
+1. **persons Table**: A "Trust Zone" containing records with hard, unique identifiers (email, phone number, social URL). Represents definitively recognizable people.
+2. **Profiles**: Can be "Unidentified" initially. The person_id in profile tables is nullable, allowing profiles to start as "unidentified" and get "identified" later.
+-------------
+
+
+3. Proposed Schema for DB experts review and advice design changes to achieve above functionality
+
+Section 1 – Core Entities
+
+-- Identity resolution anchor - no personal data, just canonical identity
+CREATE TABLE canonical_person_ids (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE person_emails (
+    email VARCHAR(255) PRIMARY KEY,
+    canonical_person_id UUID NOT NULL REFERENCES canonical_person_ids(id) ON DELETE CASCADE,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    status VARCHAR(50) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'do_not_contact')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE person_phones (
+    phone_number VARCHAR(50) PRIMARY KEY,
+    canonical_person_id UUID NOT NULL REFERENCES canonical_person_ids(id) ON DELETE CASCADE,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    status VARCHAR(50) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'do_not_contact')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE person_socials (
+    url VARCHAR(2048) PRIMARY KEY,
+    canonical_person_id UUID NOT NULL REFERENCES canonical_person_ids(id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('employer', 'agency', 'platform')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+-- for account login authentication only
+CREATE TABLE user_auth_logins (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    canonical_person_id UUID NOT NULL UNIQUE REFERENCES canonical_person_ids(id),
+    login_email VARCHAR(255) NOT NULL UNIQUE,
+    auth_provider VARCHAR(50) NOT NULL DEFAULT 'supabase',
+    auth_provider_user_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
+    -- We explicitly decided to remove this to allow the "Corporate" model (one person, multiple work logins).
+    -- UNIQUE (auth_provider, auth_provider_user_id)
+);
+
+CREATE TABLE agency_details (
+    organization_id UUID PRIMARY KEY REFERENCES organizations(id),
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE employer_details (
+    organization_id UUID PRIMARY KEY REFERENCES organizations(id),
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE platform_details (
+    organization_id UUID PRIMARY KEY REFERENCES organizations(id),
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+
+⸻
+
+Section 2 – 4 User Types / 3 Org (tenant) types
+
+CREATE TABLE candidate_profiles (
+    -- A canonical candidate. can have multiple candidate profiles
+    -- represented by multiple agencies, 
+    -- employer may already have the same cando
+    --
+    -- A unique ID for each specific candidate representation.
+    -- The identity anchor and organization relationship.
+    -- Names as known by THIS organization
+    -- Core, structured data about this specific representation.
+    -- A flexible JSONB blob for all other private, unstructured data.
+    -- Timestamps for auditing and soft deletes.
+    -- The crucial constraint that enforces our core business rule:
+    -- A person can only be represented as a candidate once PER organization.
+    -- Important to avoid multiple recruiters contact same cando, or cando asked DNC
+
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    canonical_person_id UUID NOT NULL REFERENCES canonical_person_ids(id),
+    organization_id UUID NOT NULL REFERENCES organizations(id),
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    preferred_name VARCHAR(255),
+    status VARCHAR(50) NOT NULL DEFAULT 'active',
+    candidate_summary TEXT,
+    resume_url VARCHAR(2048),
+    details JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
+    UNIQUE (canonical_person_id, organization_id)
+);
+
+
+CREATE TABLE agency_user_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_auth_login_id UUID NOT NULL REFERENCES user_auth_logins(id),
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    display_name VARCHAR(255),
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE employer_user_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_auth_login_id UUID NOT NULL REFERENCES user_auth_logins(id),
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    display_name VARCHAR(255),
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE platform_user_profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_auth_login_id UUID NOT NULL REFERENCES user_auth_logins(id),
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    display_name VARCHAR(255),
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
+    UNIQUE (user_auth_login_id)
+    -- only added UNIQUE to platform. But same person can work at multiple companies/agencies
+);
+
+CREATE TABLE organization_members (
+    user_auth_login_id UUID NOT NULL REFERENCES user_auth_logins(id),
+    organization_id UUID NOT NULL REFERENCES organizations(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
+    PRIMARY KEY (user_auth_login_id, organization_id)
+    -- phase 2: role/permission
+);
+
+
+⸻
+
+Section 3 – Submissions / Applications
+
+CREATE TABLE jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id),
+    title VARCHAR(255),
+    description TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE submissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    candidate_id UUID NOT NULL REFERENCES candidates(id),
+    job_id UUID NOT NULL REFERENCES jobs(id),
+    organization_id UUID NOT NULL REFERENCES organizations(id), -- owner of submission
+    submitted_by_user_auth_login_id UUID REFERENCES user_auth_logins(id),
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    stage VARCHAR(50) DEFAULT 'new',
+    feedback JSONB DEFAULT '{}',
+    duplicate_detected BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (candidate_id, job_id, organization_id)
+);
+
+
+⸻
+
+Section 4 – Staging / Airlock
+
+CREATE TABLE candidate_prospects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id),
+    status VARCHAR(50) NOT NULL DEFAULT 'new',
+    source VARCHAR(255),
+    full_name VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    linkedin_url VARCHAR(2048),
+    details JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+CREATE INDEX idx_candidate_prospect_email ON candidate_prospects (email);
+
+-- Ensure only one primary email and phone per person
+CREATE UNIQUE INDEX idx_person_email_primary ON person_emails(canonical_person_id) WHERE is_primary = TRUE;
+CREATE UNIQUE INDEX idx_person_phone_primary ON person_phones(canonical_person_id) WHERE is_primary = TRUE;
+
+-- STEP 1: Enable Row-Level Security on all multi-tenant tables
+ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE agency_user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE employer_user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE platform_user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE organization_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE candidate_prospects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE client_prospect ENABLE ROW LEVEL SECURITY;
+
+-- STEP 2: Create tenant isolation policies
+-- Jobs: Users can only see jobs from their organization
+CREATE POLICY tenant_isolation_job ON job
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+-- Candidate profiles: Users can only see candidates from their organization  
+CREATE POLICY tenant_isolation_candidate_profile ON candidate_profile
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+-- Agency users: Users can only see profiles from their organization
+CREATE POLICY tenant_isolation_agency_user ON agency_user
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+-- Employer users: Users can only see profiles from their organization
+CREATE POLICY tenant_isolation_employer_user ON employer_user
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+-- Platform users: Platform users can see all, others see only their org
+CREATE POLICY tenant_isolation_platform_user ON platform_user
+  FOR ALL TO authenticated
+  USING (
+    current_setting('app.user_role') = 'platform_admin'
+    OR organization_id = current_setting('app.current_org_id')::uuid
+  );
+
+-- Organization members: Users can only see members from their organization
+CREATE POLICY tenant_isolation_organization_member ON organization_member
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+-- Submissions: Agency sees all THEIR submissions (regardless of which company's job)
+CREATE POLICY tenant_isolation_submission ON submission
+  FOR ALL TO authenticated
+  USING (
+    -- Platform admin sees all
+    current_setting('app.user_role') = 'platform_admin'
+    OR
+    -- Agency/Employer sees submissions they own OR submissions to their jobs
+    organization_id = current_setting('app.current_org_id')::uuid
+    OR
+    EXISTS (
+      SELECT 1 FROM job j 
+      WHERE j.id = job_id 
+      AND j.organization_id = current_setting('app.current_org_id')::uuid
+    )
+  );
+
+-- Candidate prospects: Users can only see prospects from their organization
+CREATE POLICY tenant_isolation_candidate_prospect ON candidate_prospect
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+-- Client prospects: Users can only see prospects from their organization  
+CREATE POLICY tenant_isolation_client_prospect ON client_prospect
+  FOR ALL TO authenticated
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+
+CREATE TABLE client_prospect (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organization(id),
+    status VARCHAR(50) NOT NULL DEFAULT 'new',
+    source VARCHAR(255),
+    company_name VARCHAR(255),
+    contact_person_email VARCHAR(255),
+    details JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
+);
+CREATE INDEX idx_client_prospect_email ON client_prospect (contact_person_email);
+
+-- Add data validation constraints (industry best practices)
+ALTER TABLE person_email ADD CONSTRAINT valid_email_format 
+  CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+
+ALTER TABLE person_phone ADD CONSTRAINT valid_phone_format 
+  CHECK (phone_number ~ '^\+?[1-9]\d{6,14}$');
+
+ALTER TABLE person_social ADD CONSTRAINT valid_url_format
+  CHECK (url ~ '^https?://[^\s]+\.[^\s]+$');
+
+
+⸻
+
+Section 5 – Schema Changes & Rationale
+
+**Data Integrity Fixes Applied:**
+1. **Consistent Naming**: Changed `recruiter_profile` → `agency_user_profile` for consistency with `employer_user_profile` and `platform_user_profile` pattern
+2. **Organization Context**: Added `organization_id` and composite primary keys `(person_id, organization_id)` to all profile tables for proper multi-tenant isolation
+3. **Primary Contact Tracking**: Added `is_primary` boolean fields to `person_email` and `person_phone` with unique constraints to identify main contact methods
+4. **Foreign Key Integrity**: Updated `submission` table to properly reference composite `candidate_profile(person_id, organization_id)` key
+
+**Security & Multi-Tenant Isolation:**
+1. **Row-Level Security (RLS)**: Enabled on all multi-tenant tables with tenant isolation policies using `current_setting('app.current_org_id')`
+2. **Cross-Organization Access**: Submission policies allow agencies to see their submissions AND employers to see submissions to their jobs
+3. **Platform Admin Access**: Platform users can see all data via `current_setting('app.user_role') = 'platform_admin'` check
+
+**GDPR/CCPA Compliance (MVP Requirements):**
+1. **Soft Delete Support**: Added `deleted_at TIMESTAMPTZ` to all tables containing PII:
+   - `person`, `person_email`, `person_phone`, `person_social` (identity data)
+   - `candidate_profile`, `agency_user_profile`, `employer_user_profile`, `platform_user_profile` (role data)  
+   - `candidate_prospect`, `client_prospect` (prospect data)
+2. **Rationale**: Soft delete enables GDPR "right to be forgotten" while maintaining referential integrity and audit trails. Hard delete would break foreign key relationships and lose compliance audit data.
+
+**Data Validation (Industry Best Practices):**
+1. **Email Format**: Basic regex validation catches 95% of invalid emails without complex RFC 5322 implementation
+2. **Phone Number**: E.164 standard format (`+1234567890`) for international compatibility and normalization  
+3. **Social URLs**: Minimal security validation (https/http only) prevents XSS while allowing platform flexibility
+4. **Rationale**: Database handles basic format validation, application layer handles business logic validation (DNS, deliverability, platform-specific parsing)
+
+**Audit Trail (Standard Operations):**
+1. **Timestamp Columns**: Added `created_at` and `updated_at TIMESTAMPTZ NOT NULL DEFAULT now()` to all tables
+2. **Benefits**: Debugging support, compliance audit trails, analytics tracking, change history
+3. **Pattern**: Industry standard - used by Rails, Django, Laravel frameworks by default
+
+**Deferred to Phase II:**
+- Data retention policies and automatic purging (`data_retention_expires_at`, `retention_policy` columns)
+- Person merge/deduplication workflow and audit trail
+- Granular permission system for location/department/role-based access within organizations
+- JSONB schema validation and structure constraints (placeholder fields for now)
+- Performance indexes (pending schema finalization)
+- Table partitioning strategies for high-volume tables
+
+⸻
+
+Section 6 – TBD Supplemental (Out of Scope)
+	•	Interview
+	•	Feedback
+	•	Notes
+
+These supplemental tables do not impact top-level table designs and will be finalized later.
+
+⸻
+person ──< users (auth connection)
+       ──< candidate
+       ──< agency_user
+       ──< employer_user
+       ──< platform_user
+       ──< person_email
+       ──< person_phone
+       ──< person_social
+
+organization ──< agency_detail
+            ──< employer_detail
+            ──< platform_detail
+            ──< job
+            ──< organization_contact
+            ──< organization_member
+
+job ──< submission >── candidate_profile
+submission links job, candidate_profile, and organization (owner)
+
+------
