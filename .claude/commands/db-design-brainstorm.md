@@ -23,19 +23,16 @@ Client wants a clear, research-backed recommendation based on industry best prac
 - **Consider the whole system** not just the immediate problem, not quick overly complex quick patch
 - Project tracking: Update open issues to stay on track of current main topic - /Users/april/10x10-Repos/PROJECT-TRACKER.md. When solving, Ignore secondary topics or optimizations/security, flag them for To-Do in project-tracker. No rabbit holes
 
-- Project tracking: Stay Focused on Main Topic - Update open issues in the project tracker: /Users/april/10x10-Repos/PROJECT-TRACKER.md.
-- Ignore secondary topics or optimizations/security; flag them for future action.
-
 - Transparency and Accountability
 Be honest when unsure; provide educated guesses and cite sources. 
 
-**You are a Senior Software Architect, not fall into typical Junior Developer traps commonly seen in the internet**
+**You are a Senior Software Architect, not fall into typical Junior Developer traps commonly seen in the internet -Circular Reasoning & Silo Thinking**
 - Avoid rabbit holes—decide and move on. 
 - Garbage in, garbage out - Validate Context - Confirm schema design context (e.g., product requirements, dev environment, developer skills, timeline).
 - Lock Scope Before Starting
 Confirm a 1–2 sentence problem statement and sample results.
 Define the happy path using minimum fields; avoid detailed design and coding without approval.
-- Document lessons learned to avoid repeating mistakes or flip-flopping.
+- Document lessons learned, solutions rejected, to avoid repeating mistakes or flip-flopping prior rejected solutions.
 
 **CRITICAL LESSONS LEARNED:**
 1. **Integration Testing Required:** ALWAYS verify each option works with ALL previous decisions, not just individual requirements
@@ -144,14 +141,16 @@ Can be bolted on without schema/architecture change (extra candidate attributes,
 - **Strict tenant isolation**: Agency A cannot see Agency B's candidates, Employer A cannot see Employer B's jobs
 - **Isolation Strategy**: Ideally DB-level, acceptable at application-level if DB too complex
 
-#### User Types & Access
+#### User Types & Access (UPDATED)
 - **Platform Company Users** (your SaaS):
 	- Platform Admin - full configuration access
-	- Platform Regular Users - multiple sub-types, limited access
+	- Platform Regular Users - multiple sub-types with varying permissions (sub-type 1, sub-type 2, etc.)
 - **Client Company Users**: 
-	- Employer users, Agency users (uniform access initially - single user type per company)
+	- **Employer users**: Admin + multiple role types with varying permissions per organization
+	- **Agency users**: Admin + multiple role types (account manager, candidate recruiter, recruiting coordinator, etc.) with varying permissions per organization
+	- **Permission variability**: Some organizations completely open (everyone sees everything), others highly siloed
 - **Candidates**: Not company employees, represented by recruiters
-- **Multi-org users**: Login prompt asks which role/org they're acting as
+- **Multi-org users**: Extremely rare (0.01%) but must support - same person can have different roles at different organizations
 - **Login capability**: Users and candidates may or may not have login accounts
 
 #### Contact Information Requirements (UPDATED)
@@ -161,12 +160,14 @@ Can be bolted on without schema/architecture change (extra candidate attributes,
 - **Type transitions**: ~2% transition between candidate/employer/recruiter roles
 
 #### Multi-Profile Architecture (UPDATED)  
-- **Multiple profiles per person across organizations**: <1% multi-type, <0.1% multi-company but must support
+- **Multiple profiles per person across organizations**: Extremely rare (0.01%) but architecturally critical to support
 - **Different contact info per profile**: Same person may use different email/phone at different companies
-- **Different roles per profile**: Admin at Company A, limited access at Company B
+- **Different roles per profile**: Same person can have completely different roles/permissions across organizations
+- **Real example**: Person works as recruiting coordinator at Agency A, account manager at Agency B, solo recruiter with admin at own company
 - **Login disambiguation**: "Which company are you logging in for?" when same email used
 - **Type transitions**: When candidate becomes recruiter, keep existing candidate profile and create new recruiter profile
 - **Profile independence**: Each user type profile maintains separate data, no updates to existing profiles
+- **Design constraint**: Don't overdesign for this rare case
 
 #### User Type Attributes (UPDATED)
 - **Each user type has 10-20 unique attributes**:
@@ -175,10 +176,12 @@ Can be bolted on without schema/architecture change (extra candidate attributes,
 - **Minimal shared attributes**: first_name, last_name, job_title, organization_id
 - **Query optimization priority**: Within-type queries (high frequency) over cross-type queries (rare)
 
-#### Organization Scope Assumption
-- **Single user type per employer/agency company** (uniform access)
-- **Platform company requires multiple user types** (admin vs regular users)
-- **Design user tables first**, then add organization/tenant layer later
+#### Organization Scope & Hierarchy (UPDATED)
+- **Phase I**: Single flat organization level - no nested hierarchies for MVP implementation
+- **Phase II**: Nested organization support (parent/child orgs, departments, locations) - must design schema now to extend later without rewrite
+- **Role complexity**: Multiple user role types within each organization (admin + specialized roles)
+- **Permission variability**: Organizations have different permission models (open vs siloed)
+- **Design constraint**: Schema must support Phase II hierarchy without Phase I complexity
 
 #### Person Identity & Relationships  
 - **Multi-company relationships**: Person may work at multiple agencies/employers simultaneously or sequentially

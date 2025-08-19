@@ -1,3 +1,16 @@
-ats-candidate-ui/node_modules/
-ats-candidate-ui/.next/
+# Node.js dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables (secrets)
+.env.local
+.env
+
+# Logs
 *.log
+
+# OS files
+.DS_Store

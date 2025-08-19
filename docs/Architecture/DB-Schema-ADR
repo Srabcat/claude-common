@@ -463,7 +463,142 @@ CONSTRAINT valid_email CHECK (type != 'email' OR value ~ '^[A-Za-z0-9._%+-]+@[A-
 
 ⸻
 
+### **Decision: Organization & Role Architecture (2025-08-19)**
 
+**Decision**: 
+- **Two-table approach** - `organizations` + `organization_memberships` for role/permission management
+- **Database-level RLS** for tenant isolation
+- **Phase II ready design** with nested organization support
+
+**Schema**:
+```sql
+organizations (
+  id UUID PRIMARY KEY,
+  parent_organization_id UUID REFERENCES organizations(id), -- NULL for Phase I, enables Phase II
+  organization_type VARCHAR(20) CHECK (organization_type IN ('employer', 'agency', 'platform')),
+  name VARCHAR(200) NOT NULL,
+  domain VARCHAR(100), -- for email domain validation  
+  settings JSONB, -- organization-specific configurations
+  status VARCHAR(20) DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+organization_memberships (
+  id UUID PRIMARY KEY,
+  user_profile_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+  role_type VARCHAR(50) NOT NULL, -- 'admin', 'account_manager', 'candidate_recruiter', etc.
+  permissions JSONB, -- role-specific permissions, organization-customizable
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  
+  UNIQUE(user_profile_id, organization_id, role_type)
+);
+```
+
+**Integration with Locked User Tables**:
+```sql
+-- Primary tenant isolation via user_profiles
+user_profiles.organization_id → organizations.id
+
+-- Additional role/permission layer
+organization_memberships → user_profiles (many roles per user per org)
+```
+
+**Tenant Isolation via RLS**:
+```sql
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY tenant_isolation_user_profiles ON user_profiles
+  USING (organization_id = current_setting('app.current_org_id')::uuid);
+```
+
+**Rationale**:
+1. **Phase II readiness**: `parent_organization_id` enables nested hierarchies without schema changes
+2. **Role flexibility**: Unlimited role types per organization via `organization_memberships.role_type`
+3. **Permission customization**: JSONB permissions support organization-specific role definitions
+4. **Multi-role support**: Same user can have multiple roles within same organization
+5. **Security-first**: Database-level RLS prevents application-level data leaks
+6. **FK compatibility**: `organizations.id` directly satisfies locked `user_profiles.organization_id FK`
+
+**Alternatives Considered & Rejected**:
+
+**Option A - Embed roles in user_profiles table**:
+```sql
+user_profiles (..., role_type VARCHAR(50), permissions JSONB)
+```
+- **Rejected because**: Cannot support multi-role users within same organization
+- **Rejected because**: Violates single responsibility - mixing identity with role management
+- **Rejected because**: No clean way to handle role transitions or temporary permissions
+
+**Option B - Single organizations table only**:
+```sql
+organizations (..., default_permissions JSONB)
+```
+- **Rejected because**: No way to support user-specific roles beyond organization defaults
+- **Rejected because**: Cannot handle admin vs non-admin distinction within organizations
+- **Rejected because**: No support for role-based queries or permission inheritance
+
+**Option C - Application-level tenant isolation**:
+```sql
+-- No RLS, rely on application WHERE clauses
+WHERE organization_id = $current_org_id
+```
+- **Rejected because**: High risk of application bugs causing data leaks
+- **Rejected because**: Complex application-level filtering for all tenant-sensitive queries  
+- **Rejected because**: Audit/compliance requirements favor database-level controls
+
+**Multi-Role Example**:
+```sql
+-- Person works as admin + account_manager at Agency A
+organization_memberships: 
+  {user_profile_id: 10, organization_id: 'AgencyA', role_type: 'admin', permissions: {...}}
+  {user_profile_id: 10, organization_id: 'AgencyA', role_type: 'account_manager', permissions: {...}}
+
+-- Same person works as recruiting_coordinator at Agency B  
+organization_memberships:
+  {user_profile_id: 11, organization_id: 'AgencyB', role_type: 'recruiting_coordinator', permissions: {...}}
+```
+
+**Key SQL Queries**:
+```sql
+-- Role-based access check
+SELECT up.*, om.role_type, om.permissions 
+FROM user_profiles up 
+JOIN organization_memberships om ON up.id = om.user_profile_id
+WHERE up.auth_user_id = ? AND om.organization_id = ? AND om.is_active = true
+
+-- Tenant isolation (automatic via RLS)
+SELECT * FROM user_profiles WHERE first_name LIKE 'John%'
+-- Automatically filtered to current_setting('app.current_org_id')
+
+-- Phase II nested org query (future)
+WITH RECURSIVE org_hierarchy AS (
+  SELECT id FROM organizations WHERE id = ?
+  UNION ALL
+  SELECT o.id FROM organizations o 
+  JOIN org_hierarchy oh ON o.parent_organization_id = oh.id
+)
+SELECT up.* FROM user_profiles up WHERE up.organization_id IN (SELECT id FROM org_hierarchy)
+```
+
+**Key Assumptions**:
+- Organizations average 3-5 role types each (admin + specialized roles)
+- Multi-role users <5% of total users but architecturally important
+- Role permission queries are moderate frequency (user login, permission checks)
+- Phase II nested organizations will need recursive hierarchy queries
+- RLS performance acceptable for MVP scale (thousands of records per tenant)
+
+**Assumption Change Triggers**:
+- If role permission queries exceed 50% of total queries → consider role caching
+- If organizations average >10 role types → consider role hierarchy tables
+- If RLS performance degrades >100ms → evaluate application-level filtering
+- If nested organization queries become frequent → add materialized path columns
+
+**DECISION MARKED AS FINAL** - Organization and role architecture locked for implementation
+
+**Business Impact**: Supports complex role requirements while maintaining security-first tenant isolation, enables Phase II extension without rewrites
 
 ⸻
 
