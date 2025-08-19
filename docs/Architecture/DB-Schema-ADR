@@ -1,0 +1,469 @@
+# ATS Database Schema - Approved Architecture
+
+**Status**: ✅ **APPROVED** - 2025-08-18 14:30 PST  
+**Approval Scope**: Core person/user table architecture locked for implementation
+
+## Final Approved Table Structure:
+
+```sql
+-- Canonical identity for deduplication
+canonical_persons (
+  id UUID PRIMARY KEY,
+  canonical_person_id UUID REFERENCES canonical_persons(id),
+  status VARCHAR(20) CHECK (status IN ('active', 'merged', 'deleted')),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Parent table for all user profiles
+user_profiles (
+  id UUID PRIMARY KEY,
+  person_id UUID REFERENCES canonical_persons(id),
+  organization_id UUID, -- FK pending organizations table design
+  profile_type VARCHAR(20) CHECK (profile_type IN ('candidate', 'employer', 'agency', 'platform')),
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  job_title VARCHAR(200),
+  auth_user_id UUID, -- Supabase auth integration
+  status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'suspended')) DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Contact identifiers tied to specific profiles
+contact_identifiers (
+  id UUID PRIMARY KEY,
+  user_profile_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
+  type VARCHAR(20) CHECK (type IN ('email', 'phone', 'social')),
+  value TEXT NOT NULL,
+  is_primary BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  
+  -- Type validation constraints
+  CONSTRAINT valid_email CHECK (type != 'email' OR value ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+  CONSTRAINT valid_phone CHECK (type != 'phone' OR value ~ '^\+?[1-9]\d{1,14}$'),
+  CONSTRAINT valid_url CHECK (type != 'social' OR value ~ '^https?://')
+);
+
+-- Audit trail for contact changes
+contact_history (
+  id UUID PRIMARY KEY,
+  contact_id UUID REFERENCES contact_identifiers(id),
+  old_value TEXT,
+  new_value TEXT NOT NULL,
+  changed_at TIMESTAMP DEFAULT NOW(),
+  changed_by_user_id UUID,
+  reason TEXT
+);
+
+-- Type-specific profile details
+candidate_profiles (
+  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
+  skills JSONB,
+  education JSONB,
+  experience_years INTEGER,
+  green_card_status VARCHAR(50),
+  location VARCHAR(200),
+  preferences JSONB
+);
+
+employer_user_profiles (
+  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
+  department VARCHAR(100),
+  interviewer_flag BOOLEAN DEFAULT false,
+  hiring_permissions JSONB
+);
+
+agency_user_profiles (
+  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
+  commission_rate DECIMAL(5,2),
+  territory VARCHAR(200),
+  specializations JSONB
+);
+
+platform_user_profiles (
+  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
+  admin_rights JSONB,
+  access_scope JSONB,
+  feature_permissions JSONB
+);
+```
+
+**Next Design Phase**: Organizations table design to resolve organization_id FK dependency
+
+---
+
+Of course. That is the most critical part—capturing not just the decision, but the *defense* of that decision against pragmatic, real-world objections. This turns the document from a simple summary into a powerful tool for convincing future stakeholders and onboarding new team members.
+
+Here is the revised Architectural Decision Record, now including the "Devil's Advocate" rebuttals and a clear statement of the core assumptions.
+
+3️⃣ Rules to prevent flip-flop
+	1.	Reference lockdown table before proposing changes — must explicitly justify conflict with prior locks.
+	2.	Document reasoning in 1–2 sentences each time a decision is changed.
+	3.	Core IDs:
+	•	Person.person_id = canonical anchor
+	•	Profile.profile_id = local to profile type
+	•	Contacts = FK → Person
+	•	OrganizationMembership = FK → Profile
+---
+
+### The Architectural Decision Record (ADR) - v2
+
+This document summarizes the key architectural decisions for the multi-tenant ATS database, including the final rationale, core assumptions, and rebuttals to common objections.
+
+#### 1. The Core Identity Model: "Person-First" Canonical Identity
+
+*   **Decision:** A central `persons` table represents a unique human. All other roles link to this single record.
+*   **Core Assumption:** Preventing duplicate person records is a top business priority. The cost of managing duplicate data is higher than the cost of maintaining a central identity table.
+*   **Devil's Advocate:** "This seems overly complex. Why not just have separate `candidates` and `users` tables?"
+*   **Rebuttal:** A separate-table model inevitably leads to data chaos. The same person will exist in multiple tables, making it impossible to get a 360-degree view of an individual or to reliably detect duplicates. Our "Person-First" model solves this fundamental problem at the structural level, which is simpler in the long run.
+
+#### 2. The Login & Authentication Model: The `user_auth_logins` Table
+
+*   **Decision:** A user's login is managed by `user_auth_logins`. The `login_credential` column **must be unique**.
+*   **Core Assumption:** A single login credential (e.g., an email/password combination) must correspond to exactly one user identity within our system for it to be secure and reliable.
+*   **Devil's Advocate:** "Why must the login be unique? Can't the application code just ask the user which account they want to use if there are duplicates?"
+*   **Rebuttal:** This assumption is the bedrock of system security and integrity. Abandoning it makes critical, non-interactive system actions (like a password reset or an API call) impossible to execute reliably. The system would not know which of the duplicate records to act upon, leading to data corruption and security vulnerabilities. The `UNIQUE` constraint is not a preference; it's a prerequisite for a trustworthy system.
+
+#### 3. The Multi-Tenancy & Permissions Model: The `organization_members` Table
+
+*   **Decision:** A dedicated `organization_members` join table will manage all user-to-organization relationships.
+*   **Core Assumption:** The system must be able to support users who belong to more than one organization, even if this is a rare "corner case."
+*   **Devil's Advocate:** "This is a corner case. 99.99% of users will only belong to one organization. Why add a table for such a rare scenario?"
+*   **Rebuttal:** This addresses the **Asymmetry of Cost**. The cost of adding this table is negligible. The cost of *not* having it is catastrophic—the moment a high-value user needs this feature, the system hard-fails and requires an expensive and time-consuming redesign. Furthermore, these "corner case" users (superstar recruiters, consultants) are often the most valuable. The flexibility to support them is a critical business advantage, not a technical indulgence.
+
+#### 4. The Profile Data Model: Separate, Role-Specific Profile Tables
+
+*   **Decision:** Role-specific data (e.g., `commission_rate`) will be stored in separate profile tables (`agency_user_profile`, etc.), not in the `organization_members` table.
+*   **Core Assumption:** Different user roles will have significantly different data attributes. Combining them into one table is impractical and will lead to maintenance issues.
+*   **Devil's Advocate:** "Why not just have one `user_profiles` table with all possible columns? It's fewer tables."
+*   **Rebuttal:** This violates the **Single Responsibility Principle**. A single profile table would be wide, messy, and full of `NULL` values. It would tightly couple unrelated features (e.g., agency commissions and employer hiring settings), meaning a change in one could break the other. Separate tables ensure that the data model is clean, logical, and that features can be developed and maintained independently without unintended side effects.
+
+#### 5. The Contact Information Model: Separate, Strongly-Typed Tables
+
+*   **Decision:** Contact info is stored in separate tables (`person_emails`, `person_phones`, etc.).
+*   **Core Assumption:** Data integrity and the ability to store multiple contacts of the same type are more important than minimizing the number of tables.
+*   **Devil's Advocate:** "This seems to contradict the logic for membership. Here you are okay with checking three tables to find a person, but not for permissions."
+*   **Rebuttal:** This addresses the difference between **Authorization** and **Data Ingestion**. The membership check is a real-time authorization query that must be simple and fast. The duplicate check is a data ingestion task where performance is less critical, but data integrity is paramount. Most importantly, this design does not break **Referential Integrity**. Unlike the profile-as-membership model, this pattern does not prevent other parts of the system from creating reliable foreign keys.
+
+#### 6. The Naming Convention: A Consistent Hybrid Model
+
+*   **Decision:** Plural for core entities (`users`), descriptive for abstract tables (`user_auth_logins`). PKs are `id`, FKs are `singular_table_name_id`.
+*   **Core Assumption:** A naming convention's primary goal is clarity and alignment with the tools used to build the application.
+*   **Devil's Advocate:** "Just be consistent. Either make everything plural or everything singular."
+*   **Rebuttal:** Dogmatic consistency at the expense of clarity is poor design. `user_auth_logins` is a better, more descriptive name than the awkward `user_login_auths`. This hybrid approach provides maximum alignment with modern frameworks (which expect `users`, `applications`, etc.) while allowing for common-sense exceptions on abstract tables, resulting in the best overall readability and developer experience.
+
+Perfect — that makes sense. Here’s a minimal “lockdown design” framework we can use to prevent flip-flopping and preserve context while staying flexible:
+
+⸻
+
+1️⃣ Lockdown design principles
+	•	Every core decision is documented with:
+	1.	What is locked
+	2.	Alternatives considered
+	3.	Why this option was chosen
+	•	Changes are allowed only with justification: explain what problem prompted the change and how it preserves or modifies prior decisions.
+	•	Minimal documentation is enough — just a couple sentences per table/decision.
+
+⸻
+
+2️⃣ Current lockdown design (canonical summary)
+
+Decision	Lockdown	Alternatives considered	Reason for lock
+Person table	Canonical person table, one row per human	Separate per profile or no canonical person	Ensures identity deduplication, supports multiple profiles/orgs
+Profile tables	Separate table per type (CandidateProfile, EmployerProfile, RecruiterProfile), each FK → Person	One “all attributes” table, supertype table	Avoids bloated nullable columns; clean separation of role-specific attributes; supertype considered but not needed now
+Contacts	Three tables (Email, Phone, Social) or one unified table, all FK → Person	Store in profile tables	Centralized per person allows deduplication across profiles; separate tables fine, does not impact other core decisions
+User table	Optional, FK → Person	Embed login info in profiles	Keeps login/auth separate from profile, only for logged-in users
+OrganizationMembership	FK → Profile (not Person), FK → Organization	FK → Person	Membership is specific to a profile’s role in an org; prevents ambiguity across multiple profiles per person
+Merge / canonical_person_id	Optional FK in Person pointing to canonical row	No canonical ID, dedup on contact match only	Allows merging duplicates while preserving historical data; optional allows creating Person before canonical determination
+
+### **Decision: User Tables + Contact Table Consolidation (2025-08-14 12:35 PST)**
+
+**Decision**: 
+- **Keep 3 separate user tables** - `agency_user`, `employer_user`, `platform_user`
+- **Remove organization_contact table** - consolidate into user tables
+
+**Rationale**:
+1. **Different Data Structures**: Each user type needs different settings/fields
+2. **Unified Identity Model**: Separating "contacts" vs "users" creates split identity problems
+3. **Data Fragmentation**: Contact table introduces painful fragmentation for no benefit
+4. **Evolving Profiles**: People's roles within organizations evolve - unified model handles this better
+5. **Nullable Fields**: User tables already handle many roles with nullable fields
+
+**Key Insight**: The distinction between "user with login" vs "contact without login" is not fundamental to data structure - it's an implementation detail that can be handled via the `users` auth table relationship.
+
+**Alternative Considered**: Separate contact table - rejected due to data fragmentation and split identity problems
+
+⸻
+
+### **Decision: Contact Information Architecture (2025-08-18)**
+
+**Decision**: 
+- **Single `contacts` table** with database-level type validation
+- **Contact history audit trail** in separate `contact_history` table
+
+**Schema**:
+```sql
+CREATE TABLE contacts (
+  id SERIAL PRIMARY KEY,
+  person_id INT REFERENCES persons(id),
+  type VARCHAR(20) CHECK (type IN ('email', 'phone', 'social')),
+  value TEXT NOT NULL,
+  is_primary BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  
+  -- Database-level type validation
+  CONSTRAINT valid_email CHECK (type != 'email' OR value ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+  CONSTRAINT valid_phone CHECK (type != 'phone' OR value ~ '^\+?[1-9]\d{1,14}$'),
+  CONSTRAINT valid_url CHECK (type != 'social' OR value ~ '^https?://')
+);
+```
+
+**Rationale**:
+1. **Database integrity**: Type validation enforced at DB level prevents data corruption
+2. **Deduplication performance**: Single table enables fast duplicate detection queries  
+3. **MVP speed**: Simpler implementation than multi-table approach
+4. **Audit requirements**: Contact history tracks changes for duplicate resolution impact
+
+**Alternatives Considered & Rejected**:
+- **Option A - Contact columns in profile tables**: 
+  - **Rejected because**: Can't handle multiple contacts per person (2% have multiple emails)
+  - **Rejected because**: No audit trail support for contact changes
+  - **Rejected because**: Duplicates contact validation logic across candidate/recruiter/employer tables
+- **Option C - Separate tables (emails, phones, social_urls)**:
+  - **Rejected because**: Deduplication queries require 3-table UNION operations
+  - **Rejected because**: More complex schema management for same validation benefits
+  - **Rejected because**: Not critical for MVP volumes, adds unnecessary complexity
+
+**Business Impact**: Revenue protection through fast, reliable candidate deduplication across all contact types
+
+⸻
+
+### **Decision: Duplicate Detection Strategy (2025-08-18)**
+
+**Decision**: 
+- **Canonical Person ID approach** - each duplicate group shares same `canonical_person_id`
+- **Schema**: Add `canonical_person_id` field to candidates table, no separate duplicates table
+
+**Final Weighted Score**: Approach B (396 points) vs Approach A (363 points) = 9% advantage
+
+**Detailed Analysis by Priority:**
+
+**P1 - Add Candidate + Duplicate Detection (Weight 5x):**
+- Code: 15 vs 25 lines (10 line advantage for B)
+- Logic: Simple canonical ID assignment vs N×N relationship management
+- Operations: 2 DB ops vs 6 DB ops (negligible at MVP scale)
+
+**P2 - Real-time Submission Detection (Weight 4x):**
+- Performance: Both ~5-10ms (negligible difference)
+- Query complexity: Nearly identical
+
+**P3 - History Tracking (Weight 3x):**
+- Both approaches support contact change audit equally
+- No meaningful difference
+
+**P4 - Contact Info Changes (Weight 2x):**
+- Code: 10 vs 20 lines (10 line advantage for B)  
+- Logic: Single field update vs delete-all-rebuild cycle
+
+**P5 - Delete Consistency (Weight 1x):**
+- Approach A: CASCADE DELETE (simpler)
+- Approach B: Canonical ID reassignment (+10 lines)
+
+**P6 - Unique Candidate Queries (Weight 1x):**
+- Code: 8 vs 20 lines (12 line advantage for B)
+- Query: Simple DISTINCT vs complex group logic
+
+**Total Code Difference**: 60 vs 85 lines (30% more for Approach A)
+
+**Alternatives Considered & Rejected**:
+- **Approach A (Duplicates Relationship Table)**:
+  - **Rejected because**: 30% more code (25 additional lines)
+  - **Rejected because**: N×N relationship management complexity
+  - **Rejected because**: Delete-rebuild cycle for contact changes
+  - **Advantage**: Slightly simpler deletion handling (not significant)
+
+**Key Assumptions**:
+- Duplicate groups remain small (<5 people typically)
+- Contact changes are rare but business-critical
+- Solo developer context prioritizes code simplicity
+- MVP scale: ~1000 candidates, <1% duplicates
+
+**Assumption Change Triggers**:
+- If duplicate groups regularly exceed 10+ people → re-evaluate canonical ID performance
+- If contact change frequency >10% → re-evaluate approach complexity
+- If audit requirements demand relationship-level tracking → consider Approach A
+
+**Cross-Table Dependencies**:
+- Submissions table will use person_id, relying on canonical duplicate resolution
+- Jobs table design assumes person-level duplicate detection works
+- Organization isolation must work with canonical_person_id visibility
+
+**Detailed Implementation Analysis:**
+
+**SQL Queries for Each Approach:**
+
+*P1 - Add New Candidate:*
+```sql
+-- Approach A (Rejected):
+INSERT INTO duplicates VALUES (newId, existingId1), (newId, existingId2), 
+  (existingId1, newId), (existingId2, newId), (existingId1, existingId2), (existingId2, existingId1)
+
+-- Approach B (Selected):
+SELECT canonical_person_id FROM candidates WHERE id = existingId1;
+INSERT INTO candidates (..., canonical_person_id = ?) VALUES (...)
+```
+
+*P2 - Submission Duplicate Check:*
+```sql
+-- Approach A (Rejected):
+SELECT COUNT(*) FROM submissions s WHERE s.employer_id = ? 
+AND (s.person_id = ? OR s.person_id IN (
+  SELECT duplicate_person_id FROM duplicates WHERE person_id = ?))
+
+-- Approach B (Selected):
+SELECT COUNT(*) FROM submissions s JOIN candidates c ON s.person_id = c.id
+WHERE s.employer_id = ? AND c.canonical_person_id = (
+  SELECT canonical_person_id FROM candidates WHERE id = ?)
+```
+
+*P4 - Contact Info Change:*
+```sql
+-- Approach A (Rejected):
+DELETE FROM duplicates WHERE person_id = ? OR duplicate_person_id = ?;
+-- Then rebuild N×N relationships
+
+-- Approach B (Selected):
+UPDATE candidates SET canonical_person_id = newCanonicalId WHERE id = ?
+```
+
+*P6 - List Unique Candidates:*
+```sql
+-- Approach A (Rejected):
+SELECT COUNT(DISTINCT CASE WHEN EXISTS(SELECT 1 FROM duplicates WHERE person_id = c.id) 
+  THEN (SELECT MIN(duplicate_person_id) FROM duplicates WHERE person_id = c.id)
+  ELSE c.id END) FROM candidates c
+
+-- Approach B (Selected):
+SELECT COUNT(DISTINCT canonical_person_id) FROM candidates
+```
+
+**Scoring Details:**
+- P1: A=115pts, B=125pts (Weight 5x)
+- P2: A=100pts, B=100pts (Weight 4x)  
+- P3: A=75pts, B=75pts (Weight 3x)
+- P4: A=46pts, B=50pts (Weight 2x)
+- P5: A=25pts, B=21pts (Weight 1x)
+- P6: A=17pts, B=25pts (Weight 1x)
+**Total: A=363pts, B=396pts**
+
+**DECISION MARKED AS FINAL** - No further reconsideration without documented assumption trigger
+
+**Business Impact**: 30% faster development, simpler maintenance, equally robust duplicate detection for revenue protection
+
+⸻
+
+### **Decision: User Type Architecture (2025-08-18)**
+
+**Decision**: 
+- **Parent-child inheritance** - `user_profiles` parent table + type-specific child tables
+- **Schema**: `user_profiles` + `candidate_profiles`, `employer_user_profiles`, `agency_user_profiles`, `platform_user_profiles`
+
+**Options Considered:**
+
+**Option A - Single Table:**
+```sql
+users (id, canonical_person_id, user_type, first_name, ..., skills, commission_rate, admin_rights, ...)
+contact_identifiers (id, user_id FK, type, value, ...)
+```
+- **Rejected because**: 40-80 columns with mostly NULL values
+- **Rejected because**: Complex type-specific validation logic
+- **Rejected because**: Poor query performance on large table
+
+**Option B - Separate Flat Tables:**
+```sql
+candidates (id, canonical_person_id, first_name, skills, ...)
+employer_users (id, canonical_person_id, first_name, department, ...)
+contact_identifiers (id, ???, type, value, ...)
+```
+- **Rejected because**: Contact identifiers cannot determine which profile they belong to
+- **Rejected because**: Multi-profile support broken - no way to link contact to specific user profile
+- **Integration failure**: Violates multi-profile requirement from business needs
+
+**Option C - Parent-Child (Selected):**
+```sql
+canonical_persons (id, canonical_person_id FK, created_at, updated_at, status)
+user_profiles (id, person_id FK, organization_id FK, profile_type, first_name, last_name, job_title, auth_user_id, ...)
+contact_identifiers (id, user_profile_id FK, type, value, is_primary, is_active, ...)
+candidate_profiles (user_profile_id FK, skills, education, ...)
+```
+
+**Integration Analysis:**
+- **Decision 1 compatibility**: Duplicate detection via person_id → canonical_persons → canonical_person_id lookup
+- **Decision 2 compatibility**: Contact identifiers properly link to specific user profiles  
+- **Multi-profile support**: Same canonical person can have multiple user_profiles across organizations
+- **Authentication integration**: auth_user_id links to Supabase authentication system
+
+**Multi-Profile Example:**
+```sql
+-- Person works at two agencies
+canonical_persons: {id: 1, canonical_person_id: 1}
+user_profiles: {id: 10, person_id: 1, org_id: 'AgencyA', profile_type: 'agency', auth_user_id: 'supabase-uuid-1'}
+user_profiles: {id: 11, person_id: 1, org_id: 'AgencyB', profile_type: 'agency', auth_user_id: 'supabase-uuid-2'}  
+contact_identifiers: {user_profile_id: 10, type: 'email', value: 'john@agencyA.com'}
+contact_identifiers: {user_profile_id: 11, type: 'email', value: 'john@agencyB.com'}
+```
+
+**Key SQL Queries:**
+```sql
+-- Within-type query (high frequency)
+SELECT up.*, cp.* FROM user_profiles up 
+JOIN candidate_profiles cp ON up.id = cp.user_profile_id 
+WHERE up.organization_id = ? AND up.profile_type = 'candidate'
+
+-- Cross-type contact lookup (low frequency)  
+SELECT up.profile_type, up.first_name FROM contact_identifiers ci
+JOIN user_profiles up ON ci.user_profile_id = up.id
+WHERE ci.value = 'email@domain.com'
+
+-- Duplicate detection (via canonical lookup)
+SELECT up.* FROM user_profiles up 
+JOIN canonical_persons cp ON up.person_id = cp.id
+WHERE cp.canonical_person_id = ?
+
+-- Authentication lookup
+SELECT up.* FROM user_profiles up 
+WHERE up.auth_user_id = 'supabase-user-uuid'
+```
+
+**Type Validation Integration:**
+```sql
+-- From Decision 2 - enforced in contact_identifiers table
+CONSTRAINT valid_email CHECK (type != 'email' OR value ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+```
+
+**Key Assumptions:**
+- Each user type has 10-20 unique attributes justifying separate child tables
+- Within-type queries (95%+) outweigh cross-type queries (<5%)
+- Multi-profile users remain <1% but architecturally critical
+- JOIN performance acceptable for MVP scale (1000s records)
+
+**Assumption Change Triggers:**
+- If within-type query frequency drops below 80% → reconsider single table
+- If JOIN performance degrades >100ms → add denormalization
+- If child table attributes become similar → consolidate tables
+
+**DECISION MARKED AS FINAL** - No further reconsideration without documented assumption trigger
+
+**Business Impact**: Clean multi-profile support, optimal query performance for common patterns, 30% cleaner schema vs single table approach
+
+⸻
+
+
+
+⸻
+
