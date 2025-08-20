@@ -1,0 +1,64 @@
+Absolutely—here’s a lean and friendly breakdown of what major ATS platforms offer for audit trails, plus how you can achieve similar functionality using SQL or Supabase:
+
+⸻
+
+Audit Trail Capabilities in Major ATS
+
+Greenhouse
+	•	Offers a dedicated Audit Log (Enterprise-grade, Expert tier plus add-on) via their Business Intelligence Connector or API.
+	•	Tracks changes for jobs, candidates, configuration, sensitive data, permissions, API keys, report exports, and PII access. Includes details like who made the change, timestamps, IP, request ID, before/after values, and more—retained for ~30 days.  ￼
+	•	Accessible programmatically for dashboards or compliance tools.  ￼ ￼
+
+Lever
+	•	Provides an Audit Events API with a complete change history—including user actions like signing in, permission changes, account updates, etc.  ￼ ￼
+	•	Supports webhooks for real-time tracking of candidate-related events like application creation, stage changes, interviews, hires, and deletions.  ￼
+
+Bullhorn
+	•	Offers a “Has Changed” filter in advanced search to catch recently modified records—a lightweight way to trigger actions.  ￼
+	•	Supports entity versioning for objects like placements, with edit history tracking (might depend on your license).  ￼
+	•	Has a User Activity Report that logs actions (though limited to recent activity).  ￼
+
+Recruiterflow
+	•	No explicit audit logs or versioning capabilities found in publicly accessible documentation.  ￼
+
+⸻
+
+DIY Audit Trail via SQL / Supabase
+
+You’re right to think about build-yourself approaches—they give control and flexibility. Here’s what’s possible:
+
+PostgreSQL / Supabase DIY Options
+	•	Triggers on tables (e.g. jobs, candidates, users) to automatically insert audit records into your own log table. (Highly reliable, app-independent.)
+	•	Extensions like pgaudit for query-level logging (requires advanced setup, better in self-hosted or high-tier environments).  ￼
+	•	Write-Ahead Log (WAL) streaming / CDC (Change Data Capture) for high-volume or comprehensive capture with minimal performance impact.  ￼
+
+“There are tons of examples online of adding your own trigger to make an audit log table. It’s not very complicated at all.”  ￼
+“If you’re only looking for something simple… triggers are a nice easy next step, followed by pgaudit and then WAL streaming.”  ￼
+
+Supabase Considerations
+	•	Hosted Supabase (Pro Plan) doesn’t include built-in audit log functionality.
+	•	Triggers are your go-to mechanic for tracking CRUD changes.
+	•	Alternatives: self-host Supabase, use extensions, or raise feature requests for future support.  ￼
+
+⸻
+
+Quick Comparison Table
+
+System / Method	Audit Capability	Notes
+Greenhouse	Full audit log with metadata via API/BIC	Enterprise-only, 30-day retention
+Lever	Audit Events API + webhooks	Excellent event coverage, real-time alerts
+Bullhorn	“Has Changed” filter + entity versioning	Basic tracking, versioning may require higher tier
+Recruiterflow	No documented audit trail	May require building your own
+SQL + Supabase (DIY)	Triggers, pgaudit, or WAL streaming	Fully customizable, requires dev work
+
+
+⸻
+
+TL;DR (MVP vs. Enterprise)
+	•	Greenhouse: Best-in-class audit trail, rich data, but locked behind expensive tiers.
+	•	Lever: Good coverage with audit API + hooks—great for integration workflows.
+	•	Bullhorn: Modest tracking support; useful for alerts or basic change detection.
+	•	Recruiterflow: Audit trail not a feature—plan to build it yourself.
+	•	DIY (SQL / Supabase): Full flexibility, cost-efficient, but needs setup (triggers, logs, possibly CDC).
+
+⸻

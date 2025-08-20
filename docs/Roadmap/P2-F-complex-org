@@ -1,0 +1,88 @@
+Here’s a Phase II recap showing how we can support nested orgs and complex recruiter permissions without changing the existing Membership table:
+
+⸻
+
+1️⃣ Person
+	•	Same as Phase I:
+	•	person_id PK
+	•	Optional canonical_person_id FK → Person (for merges)
+	•	No changes needed
+
+⸻
+
+2️⃣ Profile tables
+	•	Same as Phase I:
+	•	CandidateProfile(profile_id, person_id FK)
+	•	EmployerProfile(profile_id, person_id FK)
+	•	RecruiterProfile(profile_id, person_id FK)
+	•	Supports multiple profiles per person
+	•	No changes needed
+
+⸻
+
+3️⃣ Contacts
+	•	Same as Phase I: centralized tables for all contacts:
+	•	EmailContact, PhoneContact, SocialContact
+	•	Supports multiple contacts per person
+	•	No changes needed
+
+⸻
+
+4️⃣ Organization
+	•	Phase II adds hierarchy support:
+
+Organization (
+    org_id BIGINT PRIMARY KEY,
+    parent_org_id BIGINT NULL REFERENCES Organization(org_id),
+    name VARCHAR(255),
+    org_type ENUM('company','department','location','region')
+)
+
+	•	Supports unlimited nesting: grandparent → parent → child → grandchild
+	•	Membership table continues to reference org_id → queries traverse hierarchy for access
+
+⸻
+
+5️⃣ OrganizationMembership
+	•	No changes required
+	•	Still links profile → org
+	•	Supports multiple memberships per profile (e.g., recruiter in Sales + California)
+
+⸻
+
+6️⃣ Permissions (new table)
+	•	Flexible access control for Phase II:
+
+Permission (
+    permission_id BIGINT PRIMARY KEY,
+    recruiter_profile_id BIGINT NULL,   -- NULL = all recruiters in company
+    company_id BIGINT NOT NULL REFERENCES Organization,
+    org_scope_id BIGINT NULL REFERENCES Organization, -- subtree allowed
+    department_filter VARCHAR(255) NULL,
+    region_filter VARCHAR(255) NULL,
+    policy_type ENUM('individual','role','company-wide') NOT NULL
+)
+
+	•	Handles:
+	•	Arbitrary overlapping scopes (Sales + California, Engineering + US, etc.)
+	•	Role-based access (e.g., all Sales recruiters see Sales)
+	•	Company-wide access (all recruiters see everything)
+	•	Works with nested orgs → queries can traverse tree to determine candidate visibility
+
+⸻
+
+7️⃣ Key takeaways for Phase II
+	•	Membership table is fully preserved
+	•	Profiles, Person, Contacts unchanged
+	•	Organization table extended with parent_org_id → supports hierarchy
+	•	Permission table handles flexible, overlapping, and company-specific recruiter access
+	•	Phase II is additive, no schema rewrite required, fully compatible with Phase I
+
+⸻
+
+If you want, I can also make a compact ERD for Phase II showing:
+	•	Person → Profiles → Membership → Org hierarchy → Permission table
+	•	Overlapping permissions examples
+
+This would give a single visual reference showing Phase II readiness.
+

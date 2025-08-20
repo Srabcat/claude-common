@@ -1,0 +1,342 @@
+Absolutely! Let's create a cheat sheet summarizing the key concepts we've discussed, and then I'll provide some practice questions to help you prepare for a SQL architect certification.
+
+### SQL Cheat Sheet
+
+
+### Normalization (1NF-4NF) Explained with Examples
+
+Normalization is the process of organizing data in a database to reduce redundancy and improve data integrity. Here’s a concise explanation of the first four normal forms (1NF-4NF) with examples:
+
+#### 1. **First Normal Form (1NF)**
+- **Definition**: Each column contains atomic (indivisible) values, and each record is unique.
+- **Example**:
+  ```sql
+  CREATE TABLE students (
+      student_id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      age INT NOT NULL
+  );
+  ```
+  - **Before 1NF**: A column might contain multiple values (e.g., a list of courses).
+  - **After 1NF**: Each column contains a single value.
+
+#### 2. **Second Normal Form (2NF)**
+- **Definition**: Achieve 1NF and ensure that all non-key attributes are fully functionally dependent on the primary key.
+- **Example**:
+  ```sql
+  CREATE TABLE enrollments (
+      enrollment_id SERIAL PRIMARY KEY,
+      student_id INT REFERENCES students(student_id),
+      course_id INT REFERENCES courses(course_id),
+      grade CHAR(2)
+  );
+  ```
+  - **Before 2NF**: A table might contain redundant data (e.g., course details repeated for each student).
+  - **After 2NF**: Separate tables for students and courses, with a join table for enrollments.
+
+#### 3. **Third Normal Form (3NF)**
+- **Definition**: Achieve 2NF and ensure that all attributes are only dependent on the primary key.
+- **Example**:
+  ```sql
+  CREATE TABLE courses (
+      course_id SERIAL PRIMARY KEY,
+      course_name VARCHAR(100) NOT NULL,
+      instructor_id INT REFERENCES instructors(instructor_id)
+  );
+  ```
+  - **Before 3NF**: A table might contain redundant data (e.g., instructor details repeated for each course).
+  - **After 3NF**: Separate tables for courses and instructors, with foreign keys linking them.
+
+#### 4. **Fourth Normal Form (4NF)**
+- **Definition**: Achieve 3NF and ensure that there are no multi-valued dependencies.
+- **Example**:
+  ```sql
+  CREATE TABLE student_interests (
+      student_id INT REFERENCES students(student_id),
+      interest VARCHAR(100) NOT NULL,
+      PRIMARY KEY (student_id, interest)
+  );
+  ```
+  - **Before 4NF**: A table might contain multiple interests for a student in a single row.
+  - **After 4NF**: Separate rows for each interest, ensuring no multi-valued dependencies.
+
+### Summary
+- **1NF**: Atomic values, unique records.
+- **2NF**: Achieve 1NF, no partial dependencies.
+- **3NF**: Achieve 2NF, no transitive dependencies.
+- **4NF**: Achieve 3NF, no multi-valued dependencies.
+
+Normalization helps reduce redundancy and improve data integrity, but it should be balanced with performance considerations.
+------
+
+#### 1. **Basic SQL Queries**
+- **SELECT**: Retrieve data.
+  ```sql
+  SELECT column1, column2 FROM table_name;
+  ```
+- **INSERT**: Insert new data.
+  ```sql
+  INSERT INTO table_name (column1, column2) VALUES (value1, value2);
+  ```
+- **UPDATE**: Update existing data.
+  ```sql
+  UPDATE table_name SET column1 = value1 WHERE condition;
+  ```
+- **DELETE**: Delete data.
+  ```sql
+  DELETE FROM table_name WHERE condition;
+  ```
+
+#### 2. **Joins**
+- **INNER JOIN**: Returns matching records from both tables.
+  ```sql
+  SELECT a.column, b.column
+  FROM table1 a
+  INNER JOIN table2 b ON a.id = b.id;
+  ```
+- **LEFT JOIN**: Returns all records from the left table and matching records from the right table.
+  ```sql
+  SELECT a.column, b.column
+  FROM table1 a
+  LEFT JOIN table2 b ON a.id = b.id;
+  ```
+- **RIGHT JOIN**: Returns all records from the right table and matching records from the left table.
+  ```sql
+  SELECT a.column, b.column
+  FROM table1 a
+  RIGHT JOIN table2 b ON a.id = b.id;
+  ```
+- **FULL JOIN**: Returns all records when there is a match in either left or right table.
+  ```sql
+  SELECT a.column, b.column
+  FROM table1 a
+  FULL JOIN table2 b ON a.id = b.id;
+  ```
+
+#### 3. **Sorting and Grouping**
+- **ORDER BY**: Sorts the result set.
+  ```sql
+  SELECT column1, column2
+  FROM table_name
+  ORDER BY column1 ASC, column2 DESC;
+  ```
+- **GROUP BY**: Groups rows that have the same values in specified columns.
+  ```sql
+  SELECT column1, COUNT(*)
+  FROM table_name
+  GROUP BY column1;
+  ```
+
+#### 4. **Pattern Matching**
+- **LIKE**: Matches a pattern.
+  ```sql
+  SELECT * FROM table_name WHERE column LIKE 'pattern%';
+  ```
+- **ILIKE**: Case-insensitive pattern matching.
+  ```sql
+  SELECT * FROM table_name WHERE column ILIKE 'pattern%';
+  ```
+- **SIMILAR TO**: Uses regular expressions.
+  ```sql
+  SELECT * FROM table_name WHERE column SIMILAR TO 'pattern%';
+  ```
+- **~ (Regular Expression)**: POSIX regular expression.
+  ```sql
+  SELECT * FROM table_name WHERE column ~ 'pattern';
+  ```
+
+#### 5. **Schemas and Namespaces**
+- **Create Schema**: Creates a new schema.
+  ```sql
+  CREATE SCHEMA my_schema;
+  ```
+- **Move Object to Schema**: Moves an object to a different schema.
+  ```sql
+  ALTER TABLE public.my_table SET SCHEMA my_schema;
+  ```
+
+#### 6. **Sequences and Identifiers**
+- **Create Sequence**: Creates a sequence.
+  ```sql
+  CREATE SEQUENCE my_sequence START 1;
+  ```
+- **Use Sequence**: Uses a sequence for auto-incrementing IDs.
+  ```sql
+  CREATE TABLE my_table (
+      id INT PRIMARY KEY DEFAULT nextval('my_sequence'),
+      name VARCHAR(255)
+  );
+  ```
+
+#### 7. **Stored Procedures and Triggers**
+- **Stored Procedure**: A set of SQL statements stored in the database.
+  ```sql
+  CREATE OR REPLACE FUNCTION my_function() RETURNS void AS $$
+  BEGIN
+      -- Function logic
+  END;
+  $$ LANGUAGE plpgsql;
+  ```
+- **Trigger**: Automatically executes in response to certain events.
+  ```sql
+  CREATE TRIGGER my_trigger
+  AFTER INSERT ON my_table
+  FOR EACH ROW
+  EXECUTE FUNCTION my_function();
+  ```
+
+#### 8. **Materialized Views**
+- **Create Materialized View**: Creates a materialized view.
+  ```sql
+  CREATE MATERIALIZED VIEW my_materialized_view AS
+  SELECT * FROM my_table;
+  ```
+- **Refresh Materialized View**: Refreshes the materialized view.
+  ```sql
+  REFRESH MATERIALIZED VIEW my_materialized_view;
+  ```
+
+#### 9. **Constraints**
+- **Primary Key**: Uniquely identifies each row.
+  ```sql
+  CREATE TABLE my_table (
+      id INT PRIMARY KEY,
+      name VARCHAR(255)
+  );
+  ```
+- **Foreign Key**: Links a column to a primary key in another table.
+  ```sql
+  CREATE TABLE my_table (
+      id INT PRIMARY KEY,
+      parent_id INT REFERENCES parent_table(id)
+  );
+  ```
+- **Unique**: Ensures all values in a column are unique.
+  ```sql
+  CREATE TABLE my_table (
+      id INT PRIMARY KEY,
+      name VARCHAR(255) UNIQUE
+  );
+  ```
+- **Check**: Ensures values in a column satisfy a specific condition.
+  ```sql
+  CREATE TABLE my_table (
+      id INT PRIMARY KEY,
+      level VARCHAR(50) CHECK (level IN ('Principal', 'Senior', 'Junior', 'Intern'))
+  );
+  ```
+
+### Practice Questions
+
+#### Intermediate Questions
+1. **Write a query to retrieve all customers from Germany and sort them by their contact name in descending order.**
+   ```sql
+   SELECT * FROM Customers
+   WHERE Country = 'Germany'
+   ORDER BY ContactName DESC;
+   ```
+
+2. **Write a query to update the contact name of the customer with ID 1 to 'John Doe'.**
+   ```sql
+   UPDATE Customers
+   SET ContactName = 'John Doe'
+   WHERE CustomerID = 1;
+   ```
+
+3. **Write a query to delete all orders placed before January 1, 2020.**
+   ```sql
+   DELETE FROM Orders
+   WHERE OrderDate < '2020-01-01';
+   ```
+
+#### Advanced Questions
+1. **Write a query to find the total number of orders placed by each customer, grouped by country.**
+   ```sql
+   SELECT c.Country, COUNT(o.OrderID) AS TotalOrders
+   FROM Customers c
+   JOIN Orders o ON c.CustomerID = o.CustomerID
+   GROUP BY c.Country;
+   ```
+
+2. **Write a stored procedure to insert a new customer and place an order for them.**
+   ```sql
+   CREATE OR REPLACE FUNCTION insert_customer_and_order(
+       p_customer_name VARCHAR(255),
+       p_contact_name VARCHAR(255),
+       p_order_amount INT
+   ) RETURNS void AS $$
+   DECLARE
+       v_customer_id INT;
+   BEGIN
+       INSERT INTO Customers (CustomerName, ContactName)
+       VALUES (p_customer_name, p_contact_name)
+       RETURNING CustomerID INTO v_customer_id;
+
+       INSERT INTO Orders (CustomerID, OrderAmount)
+       VALUES (v_customer_id, p_order_amount);
+   END;
+   $$ LANGUAGE plpgsql;
+   ```
+
+3. **Write a trigger to automatically update the `LastUpdated` timestamp whenever a row in the `Customers` table is updated.**
+   ```sql
+   CREATE OR REPLACE FUNCTION update_last_updated()
+   RETURNS TRIGGER AS $$
+   BEGIN
+       NEW.LastUpdated = NOW();
+       RETURN NEW;
+   END;
+   $$ LANGUAGE plpgsql;
+
+   CREATE TRIGGER update_last_updated_trigger
+   BEFORE UPDATE ON Customers
+   FOR EACH ROW
+   EXECUTE FUNCTION update_last_updated();
+   ```
+
+### Additional Key Concepts to Learn
+
+1. **Indexes**: Improve query performance.
+   ```sql
+   CREATE INDEX idx_customer_name ON Customers (CustomerName);
+   ```
+
+2. **Transactions**: Ensure data integrity.
+   ```sql
+   BEGIN;
+   UPDATE Customers SET ContactName = 'John Doe' WHERE CustomerID = 1;
+   INSERT INTO Orders (CustomerID, OrderAmount) VALUES (1, 100);
+   COMMIT;
+   ```
+
+3. **Partitioning**: Divide large tables into smaller, more manageable pieces.
+   ```sql
+   CREATE TABLE my_table (
+       id INT PRIMARY KEY,
+       name VARCHAR(255)
+   ) PARTITION BY RANGE (id);
+
+   CREATE TABLE my_table_part1 PARTITION OF my_table FOR VALUES FROM (1) TO (1000);
+   ```
+
+4. **Functions and Procedures**: Automate complex logic.
+   ```sql
+   CREATE OR REPLACE FUNCTION my_function() RETURNS INT AS $$
+   DECLARE
+       v_result INT;
+   BEGIN
+       SELECT COUNT(*) INTO v_result FROM my_table;
+       RETURN v_result;
+   END;
+   $$ LANGUAGE plpgsql;
+   ```
+
+5. **Views**: Simplify complex queries.
+   ```sql
+   CREATE VIEW my_view AS
+   SELECT * FROM my_table WHERE name LIKE 'A%';
+   ```
+
+### Study and Test
+
+Take some time to study the cheat sheet and practice the questions. Once you feel confident, let me know, and I'll give you a test to assess your understanding. Good luck!

@@ -1,0 +1,7 @@
+- Research common best practices given that ATS is a well-known domain with many widely used products. After research, capture them in ADR to avoid re-resarch. Key products to research when needed (avoid rabbit hole on marketing pages)
+- https://docs.merge.dev/integrations/ats/supported-fields/?commonModel=Job
+- https://vertabelo.com/blog/designing-a-database-for-a-recruitment-system/
+- Employer side: Greenhouse and https://developers.ashbyhq.com/reference/introduction
+- Agency side: https://kb.bullhorn.com/ats/Content/BHATS/Topics/submissionTab.htm and recruiterflow
+- Platform side: paraform and wellfound
+
