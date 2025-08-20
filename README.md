@@ -2,6 +2,8 @@
 
 Universal Claude Code configurations and shared instructions for the 10x10 recruitment platform repositories.
 
+*Test change for GitHub authentication verification.*
+
 ## 10x10 Platform Overview
 
 Multi-component recruitment platform with legacy LoopBack 3 system and new Next.js SaaS application.
