@@ -58,6 +58,9 @@ claude-common/
 │       └── post-task      # Plays completion sound
 ├── assets/
 │   └── done.mp3          # Task completion sound
+├── docs/
+│   └── Architecture/      # Technical architecture documentation
+│       └── research-cache/ # Cached research results with verified URLs
 ├── claude.md             # Shared Claude instructions
 └── README.md             # This file
 ```
@@ -66,6 +69,23 @@ claude-common/
 
 - **DRY Principle**: Write commands once, use everywhere
 - **Consistency**: Same instructions and helpers across all projects
+
+## Research Cache
+
+To reduce token usage and avoid re-researching the same topics, research results are cached in `docs/Architecture/research-cache/` with verified URLs:
+
+### Finding Research:
+- **ATS Standards**: `research-cache/ats-*-research.md`
+- **API Documentation**: `research-cache/*-api-*.md` 
+- **Industry Patterns**: `research-cache/industry-*-patterns.md`
+
+### Research Format:
+Each research file includes:
+- **Date**: When research was conducted
+- **Source**: Primary source (official docs, API specs, etc.)
+- **Verified URLs**: Direct links for verification
+- **Key Findings**: Extracted insights and patterns
+- **Implementation Notes**: Technical considerations
 
 ## Repository Integration
 

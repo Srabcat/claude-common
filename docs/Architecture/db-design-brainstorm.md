@@ -68,6 +68,7 @@ Follow structure of the file, dont add new files, update/revise rather than addi
 - **Propose alternatives** find and cosider simpler paths, including non DB based options
 - **Consider the whole system** not just the immediate problem, not quick patch with side effects
 - Transparency and Accountability - Be honest when unsure; say it's educated guesses (no falas claims) and cite sources. 
+- **Add value** you are the architect, don't just summarize and react to what I, a junior developer, tell you. You are the elite architect, who should be pointing out what I missed. Before consider my suggestions, apply your own first principal thinking first.
 
 ## DESIGN PROCESS AGREEMENT - Before start, consideration, alternative design, validate design, 
 
@@ -107,6 +108,25 @@ Garbage in, Garbage out design the wrong requirements.
     - Dont side track with **premature optimization** - all fields in the table, security, performance, before the design is approved.
     - Capture pending topics identified such as performance, security todos in project tracking file rather than rabbit hole. 1 main topic at a time.
 
+5. Not reinventing the wheel - leverage battle tested solutions. Useful research (only if needed)
+
+### Well know ATS Research Sources (2025-08-20) - if needed
+
+**API Documentation Links:** - only if more research is needed
+- Merge.dev ATS Jobs API: https://docs.merge.dev/ats/jobs/#jobs_list - good consolidated features across many ATS
+- Ashby Job Create API: https://developers.ashbyhq.com/reference/jobcreate  
+- Greenhouse Email Templates API: https://developers.greenhouse.io/harvest.html#the-email-template-object
+- https://developer.salesforce.com/docs/atlas.en-us.object_reference.meta/object_reference/sforce_api_objects_account.htm
+
+**Existing Research Files:**
+- `/docs/Roadmap/Reference/Competitors/Technical/DATA_SCHEMAS.md` - Comprehensive schema analysis
+- `/docs/Roadmap/Reference/Competitors/Technical/API_PATTERNS.md` - API architecture patterns
+- `/docs/Roadmap/Reference/Competitors/Technical/DATABASE_ARCHITECTURE.md` - Database design patterns
+
+**Implementation Files:**
+- `/docs/Architecture/Complete-Database-Field-Specifications.md` - All table SQL definitions with field explanations and constraints
+
+
 ### Design Considerations
 - **Scalability**: Design to handle enterprise-level volumes, starting with current volumes. MVP schema that is easily extensible.
 - **Table Architecture**: Focus on initial table design; allow for future partitioning and sharding.
@@ -117,6 +137,12 @@ Garbage in, Garbage out design the wrong requirements.
 #### Design Checklist
 - [ ] normalization
 - [ ] PK, FK relationships (including prior designed tables)
+- [ ] **Values Architecture Framework Decision**: ENUM vs lookup tables vs application constants vs JSON config for all constrained value fields
+- [ ] **Migration Risk Assessment**: Zero-downtime value changes vs schema lock implications
+- [ ] **Multi-tenant Value Isolation**: Global vs tenant-customizable value requirements
+- [ ] **Performance Tiering**: High-frequency vs low-frequency value field optimization
+- [ ] **Regulatory Immutability**: Value change history requirements for compliance/audit
+- [ ] **API Contract Stability**: External system integration impact of value structure changes
 - [ ] Reference data as JSON config vs database tables decision justified
 - [ ] tenant isolation, Security
 - [ ] Schedma extensibility for future proofing
@@ -364,4 +390,222 @@ Record in ADR:
 - **Contact Lookup**: Identify person by contact info (phone, email, URL).
 - **Canonical Person Identification**: Determine if a person is known or new, and how many people are linked to a canonical person.
 
+
+---
+
+## CONSTRAINED VALUES FIELD ARCHITECTURE FRAMEWORK DECISION (2025-08-20)
+
+### Problem Statement
+Database schema contains numerous fields with constrained value sets (user_roles, job_status, submission_stage, tenant_types, contact_types, etc.). Need systematic framework to determine optimal data type/storage approach for each field type.
+
+### Architecture Options
+1. **PostgreSQL ENUM types**
+2. **Lookup tables with foreign keys**
+3. **Application constants (hardcoded)**
+4. **JSON config files**
+5. **String storage with application validation**
+6. **Integer storage with mapping tables**
+
+### Critical Architecture Factors 
+
+**SHOWSTOPPER Factors (5x weight):**
+- **Value Retirement Strategy**: How to deprecate/remove values without breaking existing data
+- **Customization Level**: Company-level vs tenant-level vs global value customization requirements
+- **Data Integrity**: Referential integrity vs application-level validation trade-offs
+
+**CRITICAL Factors (4x weight - MVP focus):**
+- **Change Likelihood**: MVP→Phase II value additions/modifications frequency  
+- **Developer Effort**: Absolute LOC overhead (>1000 lines = deal-breaker, >100 lines = significant consideration, <50 lines = manageable)
+- **Data Consistency**: Breaking changes during value evolution
+- **Query Performance**: High-frequency operations (string comparison vs integer FK lookup) if More than 100ms delta from user's perspective based on the foreseeable volume of entries.
+
+**IMPORTANT Factors (3x weight):**
+- **Schema Evolution**: Adding/removing values without breaking deployments. Small downtime (less than an hour) is acceptable.
+- **Consistency**: Developer cognitive load from mixed approaches across schema
+- **International Future-Proofing**: Global expansion value requirements
+
+**FUTURE-PROOFING Factors (2x weight - Phase II considerations):**
+- **Migration Safety**: ENUM changes require ALTER TYPE with table locks (Phase II production concern)
+- **API Stability**: External system integration impact when value structures change (Phase II API concern)
+- **Regulatory Compliance**: Immutable audit trails for submission stage changes (Phase II compliance)
+
+**REMOVED Factors (truly negligible):**
+- ~~Storage efficiency~~ (negligible even at massive scale)
+
+### Field Categorization Matrix
+
+**High-Frequency + Stable Values** (job_status, submission_stage):
+- Query frequency: >1000x/day per tenant
+- Change frequency: Quarterly at most
+- Multi-tenant: Some need customization
+
+**High-Frequency + Evolving Values** (user_roles, contact_types):
+- Query frequency: >1000x/day per tenant
+- Change frequency: Monthly feature releases
+- Multi-tenant: Mostly global, some tenant-specific
+
+**Low-Frequency + Stable Values** (tenant_types, system_config):
+- Query frequency: <100x/day per tenant
+- Change frequency: Major releases only
+- Multi-tenant: Global only
+
+**Low-Frequency + Evolving Values** (integration_types, notification_preferences):
+- Query frequency: <100x/day per tenant  
+- Change frequency: Feature-driven
+- Multi-tenant: Mixed requirements
+
+### Key Assumptions & Validation Criteria
+
+**Critical Assumptions (UPDATED 2025-08-20):**
+- Migration downtime acceptable for MVP (small customer base, no production system yet)
+- Company-level customization needed for user_roles (not just tenant-level)
+- 30% of companies will need custom submission stages within 12 months
+- Developer effort difference >100 LOC absolute overhead is deal-breaker for MVP speed
+- No external APIs in Phase I, API stability matters for Phase II
+- International expansion will require different value sets (work authorization, education)
+
+**Validation Criteria:**
+1. **Value Retirement Test**: Can deprecated values be removed without data loss?
+2. **Customization Test**: Can companies configure their own value sets efficiently?
+3. **Performance Test**: <50ms response for high-frequency value filtering queries
+4. **Developer Test**: <100 LOC absolute overhead for common CRUD operations
+5. **Evolution Test**: Can new values be added AND old values be retired without breaking existing code?
+6. **Consistency Test**: Are similar field types handled consistently across schema?
+
+**Re-evaluation Triggers:**
+- If company-level customization requirements exceed 80% of fields
+- If international requirements become immediate (non-US customers)
+- If performance degrades >100ms for high-frequency queries
+- If developer complexity exceeds 100 LOC absolute overhead
+
+---
+
+## USER-RELATED CONSTRAINED VALUE FIELDS - REQUIREMENTS & OPEN ISSUES (2025-08-20)
+
+### Identified Fields Analysis
+
+**Core Identity Fields:**
+- `tenant_types`: 'employer', 'agency', 'platform' 
+  - **OPEN ISSUE**: Should 'candidate' be a tenant type or just a data entity?
+- `contact_types`: 'email', 'phone', 'linkedin', 'github', 'tiktok', etc.
+  - **Change Likelihood**: HIGH (new social platforms emerge ~annually)
+  - **Customization**: Global values
+
+**User Management Fields:**
+- `user_roles`: Role-based permissions per company
+  - **CRITICAL REQUIREMENT**: Company-level customization (not just tenant-level)
+  - **Examples**: 'admin', 'account_manager', 'recruiting_coordinator', 'candidate_recruiter'
+  - **Change Likelihood**: MEDIUM (companies add custom roles)
+  - **Customization**: Company-level (each org defines own roles)
+
+**Account Management Fields:**
+- `account_status`: 'active', 'inactive', 'suspended', 'pending_verification'
+  - **RESEARCH NEEDED**: What do competitors use? What does 'suspended' vs 'pending_verification' mean?
+- `login_status`: 'enabled', 'disabled', 'password_reset_required'
+  - **OPEN ISSUE**: Is this redundant with account_status? Do all users need login capability?
+  - **FUTURE CONSIDERATION**: 2FA, biometric authentication states
+
+**International/Future-Proofing Fields:**
+- `work_authorization`: 'citizen', 'permanent_resident', 'h1b', 'opt', 'no_authorization'
+  - **OPEN ISSUE**: US-only for MVP, but how to future-proof for UK/Japan/global?
+  - **Change Likelihood**: MEDIUM (immigration law changes, international expansion)
+- `education_level`: 'high_school', 'associates', 'bachelors', 'masters', 'phd'
+  - **RESEARCH NEEDED**: What standards do LinkedIn/competitors use?
+  - **OPEN ISSUE**: International education systems differ significantly
+
+**Candidate-Specific Fields:**
+- `candidate_source`: 'linkedin', 'referral', 'job_board', 'cold_outreach', 'self_applied'
+  - **OPEN ISSUE**: Granularity level? Which referral? Which job board?
+- `experience_level`: 'entry', 'mid', 'senior', 'staff', 'principal', 'executive'
+
+### Open Architecture Questions
+
+**Company-Level vs Tenant-Level Customization:**
+- Which fields need company-level customization vs tenant-level vs global?
+- How to handle same role names with different responsibilities across companies?
+
+**Field Overlap & Necessity:**
+- `login_status` vs `account_status`: Are both needed?
+- `profile_visibility`: Do any competitors use this? Is it necessary?
+
+**Value Retirement Strategy:**
+- How to handle deprecated values without breaking historical data?
+- Migration path for international expansion (US → global work authorization values)?
+
+
+### Research Findings (COMPLETED 2025-08-20)
+
+**From Greenhouse API + Competitor Analysis:**
+- `application_status`: "active", "rejected", "hired", "converted" 
+  - **"converted"**: When candidate application becomes employee record (hired → converted to employee)
+- `attachment_visibility`: "public", "private", "admin_only"
+  - **"public"**: Visible to all hiring team members
+  - **"private"**: Visible only to uploader/specific users
+  - **"admin_only"**: Visible only to system administrators
+- `experience_level`: "entry", "mid", "senior", "staff", "principal", "executive"
+- `candidate_source`: "job_board", "referral", "agency", "direct"
+
+**Key Architectural Findings:**
+1. **Company-Level Customization Confirmed**: Greenhouse uses extensive `customFields: Record<string, any>`
+2. **Separate Application vs Account Status**: All major platforms distinguish these
+3. **No Login Status Field**: Not found in competitor APIs - likely combined with account status
+4. **Profile Visibility Not Standard**: Not found in major ATS platforms - potentially unnecessary
+
+### Constrained Value Field Recommendations
+
+**HIGH Customization (Company-Level):**
+- `user_roles`: Each company defines own roles ("account_manager" means different things)
+- Custom hiring stages/submission stages per organization
+
+**MEDIUM Customization (Tenant-Level):**
+- `work_authorization`: US-standard for MVP, country-specific for international
+- `candidate_source`: Core values + org-specific sources
+
+**GLOBAL Standards (No Customization):**
+- `tenant_types`: "employer", "agency", "platform" (architectural constants)
+- `contact_types`: "email", "phone", "linkedin", "github" (universal)
+- `application_status`: "active", "rejected", "hired", "converted" (industry standard)
+- `experience_level`: Industry-standard levels
+
+### Open Architecture Questions (UPDATED)
+
+1. **RESOLVED**: `profile_visibility` - NOT needed based on competitor analysis
+   - **Why suggested earlier**: Privacy controls for candidate data sharing across organizations
+   - **Why removing**: No evidence in major ATS platforms, adds complexity without business value
+2. **RESOLVED**: `login_status` vs `account_status` - Use single `account_status` field
+   - **Rationale**: Application and account are distinct entities (candidate+job vs person)
+3. **RESOLVED**: Candidate as tenant type - Keep candidates as data entities, not tenants
+   - **Rationale**: Data volume imbalance, different permission models, competitor patterns
+4. **OPEN**: Work authorization international expansion strategy
+
+---
+
+## CONSTRAINED VALUE FIELD DESIGN DECISIONS (2025-08-20)
+
+### Decision Framework Application
+
+**Scoring Scale**: 0 = Impossible, 1 = Very Poor, 2 = Poor, 3 = Moderate, 4 = Good, 5 = Excellent
+
+### 1. USER_ROLES Field Decision
+
+**Requirement**: Each company must define their own role values (Company A: "Senior Recruiter", Company B: "Lead Talent Acquisition")
+
+**Scoring Matrix:**
+
+| Factor | Weight | ENUM | Lookup Table | App Constants | JSON Config |
+|--------|---------|------|--------------|---------------|-------------|
+| **Company-Level Customization** | 5x | 0 (Impossible - DB-wide ENUMs) | 5 (Excellent - company_id column) | 0 (Impossible - hardcoded) | 4 (Good - per-company files) |
+| **Change Likelihood** | 4x | 1 (ALTER TYPE required) | 5 (Simple INSERT/UPDATE) | 2 (Code deployment) | 4 (Config file edit) |
+| **Developer Effort** | 4x | 4 (Simple if worked) | 3 (FK + joins ~50 LOC) | 5 (Hardcoded map ~20 LOC) | 3 (Config loading ~60 LOC) |
+
+**Weighted Scores:**
+- ENUM: (0×5) + (1×4) + (4×4) = **20**
+- Lookup Table: (5×5) + (5×4) + (3×4) = **57** ✅ **WINNER**
+- App Constants: (0×5) + (2×4) + (5×4) = **28**
+- JSON Config: (4×5) + (4×4) + (3×4) = **48**
+
+**DECISION: Lookup Table**
+- **Implementation**: `user_roles` table with `(id, company_id, role_name, description, permissions_json, active)`
+- **FK**: `users.role_id → user_roles.id`
+- **Validation**: Application ensures role belongs to user's company
 

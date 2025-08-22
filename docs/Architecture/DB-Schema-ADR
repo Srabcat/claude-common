@@ -3,279 +3,360 @@
 **Status**: ✅ **14 TABLES LOCKED & VALIDATED** - Complete ATS Core Schema Finalized  
 **Last Updated**: 2025-08-20
 
-## 🗂️ **COMPLETE FINALIZED SCHEMA (All Locked Tables)**
+## 🏗️ **THREE ARCHITECTURAL PATTERNS FOR CONSTRAINED VALUES (2025-08-20)**
 
-### **Jobs Layer (1 table - MVP):**
+### **Pattern 1: Company-Level Customization → Lookup Tables**
+**Characteristics**: Each organization needs different values  
+**Fields**: `user_roles`, `hiring_stages`, `candidate_sources`  
+**Winner**: Lookup Tables (only option supporting per-company values)
+
+### **Pattern 2: Global Standards → Application Constants + CHECK**  
+**Characteristics**: Industry-standard values, stable, no customization  
+**Fields**: `account_status`, `tenant_types`, `contact_types`, `experience_level`, `application_status`  
+**Winner**: App Constants (best performance + easy additions)
+
+### **Pattern 3: Regional/Static Values → App Constants (Split Hair with JSON)**  
+**Characteristics**: Values vary by country/region but are still static
+**Fields**: `work_authorization`, `education_level`  
+**Conclusion**: **Split hair** between App Constants and JSON Config - functionally identical approaches. Both require deployment for changes. Pick one and stick with it.
+
+---
+
+## 🔧 **APPROVED CONSTRAINED VALUES IMPLEMENTATIONS**
+
+### **APPROVED: USER_ROLES Field (Pattern 1)**
+**Decision**: Lookup Table approach  
+**Score**: 57 points (vs ENUM: 20, App Constants: 28, JSON Config: 48)
+
+**Implementation**:
 ```sql
--- Core job postings
-jobs (
-  id UUID PRIMARY KEY,
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  created_by_user_id UUID REFERENCES user_profiles(id),
-  
-  -- Basic job information
-  title VARCHAR(500) NOT NULL,
+CREATE TABLE user_roles (
+  id SERIAL PRIMARY KEY,
+  company_id UUID REFERENCES companies(id),
+  role_name VARCHAR(100) NOT NULL,
   description TEXT,
-  job_type VARCHAR(20) CHECK (job_type IN ('full_time', 'part_time', 'contract', 'temporary')),
-  job_category VARCHAR(50) CHECK (job_category IN ('Engineering & Technology', 'Sales & Business Development', 'Marketing & Communications', 'Operations & Management', 'Customer Success & Support', 'Finance & Accounting', 'Human Resources', 'Other')),
-  
-  -- Job requirements and details
-  requirements JSONB, -- skills, experience, education, travel, visa requirements
-  compensation JSONB, -- salary range, benefits, equity
-  location_details JSONB, -- remote/office/hybrid, specific locations
-  custom_tags JSONB, -- additional searchable attributes
-  
-  -- Job lifecycle
-  status VARCHAR(20) CHECK (status IN ('draft', 'active', 'paused', 'closed', 'filled', 'cancelled')) DEFAULT 'draft',
-  job_access_level VARCHAR(20) DEFAULT 'marketplace', -- future-proof for private/approved jobs
-  
-  -- Timestamps
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  closed_at TIMESTAMP, -- NULL when active
-  
-  -- Search optimization
-  search_vector TSVECTOR -- for full-text search performance
+  permissions_json JSONB,
+  active BOOLEAN DEFAULT true,
+  UNIQUE(company_id, role_name)
 );
 ```
 
-### **Submissions Layer (1 table - MVP):**
+**Scoring Analysis - Company Customization Required**:
+| Factor | Weight | ENUM | Lookup Table | App Constants | JSON Config |
+|--------|---------|------|--------------|---------------|-------------|
+| **Company Customization** | 5x | 0 (Impossible) | 5 (Perfect fit) | 0 (Impossible) | 4 (File per company) |
+| **Change Likelihood** | 4x | 1 (ALTER TYPE) | 5 (Simple INSERT) | 2 (Code deploy) | 4 (File edit) |
+| **Developer Effort** | 4x | 4 (Simple if worked) | 3 (FK + joins ~50 LOC) | 5 (Constants ~20 LOC) | 3 (Config ~60 LOC) |
+
+**Why Lookup Table Wins**: ENUM and App Constants score 0 for customization (SHOWSTOPPER). Only lookup tables can handle per-company role definitions.
+
+### **APPROVED: ACCOUNT_STATUS Field (Pattern 2)**  
+**Decision**: Application Constants + CHECK Constraint  
+**Score**: 65 points (vs ENUM: 50, Lookup Table: 45, JSON Config: 32)
+
+**Implementation**:
 ```sql
--- Core business process: candidate applications to jobs
-submissions (
-  id UUID PRIMARY KEY,
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE, -- tenant isolation (denormalized for performance)
-  job_id UUID REFERENCES jobs(id) ON DELETE CASCADE,
-  candidate_profile_id UUID REFERENCES candidate_profiles(user_profile_id) ON DELETE CASCADE,
-  submitted_by_user_id UUID REFERENCES user_profiles(id), -- recruiter who made submission
-  
-  -- Submission workflow tracking
-  stage VARCHAR(50) DEFAULT 'submitted' CHECK (stage IN ('submitted', 'screening', 'interviewing', 'offer', 'hired', 'rejected', 'withdrawn')),
-  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'in_review', 'approved', 'declined', 'on_hold', 'waiting_feedback', 'waiting_approval')),
-  
-  -- Interview progression (separate from stage/status)
-  interview_stage VARCHAR(50), -- 'phone_screen', 'technical', 'final', 'reference_check'
-  interview_round INTEGER, -- 1, 2, 3 for tracking depth through interview process
-  
-  -- Submission details
-  cover_letter TEXT,
-  recruiter_notes TEXT,
-  feedback JSONB, -- structured feedback from employer
-  rejection_reason TEXT,
-  
-  -- Business tracking
-  fee_percentage DECIMAL(5,2), -- commission rate for this placement
-  expected_salary DECIMAL(12,2), -- candidate salary expectation
-  
-  -- Timestamps
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  submitted_at TIMESTAMP DEFAULT NOW(),
-  last_stage_change_at TIMESTAMP DEFAULT NOW(),
-  
-  -- Prevent duplicate submissions (same candidate to same job by same tenant)
-  UNIQUE(job_id, candidate_profile_id, tenant_id)
-);
+account_status VARCHAR(50) NOT NULL 
+CHECK (account_status IN ('active', 'inactive', 'suspended', 'pending_verification'))
+```
+```typescript
+const ACCOUNT_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive', 
+  SUSPENDED: 'suspended',
+  PENDING: 'pending_verification'
+} as const;
 ```
 
-### **Person/Identity Layer (4 tables):**
+**Scoring Analysis - Global Standards**:
+| Factor | Weight | ENUM | App Constants | Lookup Table | JSON Config |
+|--------|---------|------|---------------|--------------|-------------|
+| **Company Customization** | 1x | 5 (Not needed) | 5 (Not needed) | 5 (Overkill) | 4 (Complex) |
+| **Change Likelihood** | 2x | 1 (300 LOC app changes) | 4 (20 LOC constraint) | 4 (20 LOC table) | 4 (File + app) |
+| **Developer Effort** | 4x | 5 (Simple ~10 LOC) | 5 (Constants ~15 LOC) | 2 (JOINs ~50 LOC) | 3 (Config ~40 LOC) |
+| **Query Performance** | 4x | 5 (Direct comparison) | 5 (Direct comparison) | 3 (Requires JOINs) | 4 (Memory lookup) |
+| **Value Evolution** | 3x | 1 (Complex migration) | 4 (Simple update) | 4 (Simple update) | 3 (Config + deploy) |
 
+**Why App Constants Win**: No customization needed, excellent performance, easy value additions. ENUM loses due to application code change complexity for renames.
+
+### **APPROVED: WORK_AUTHORIZATION Field (Pattern 3)**
+**Decision**: JSON Config Files by Country  
+**Score**: 72 points (vs ENUM: 35, App Constants: 55, Lookup Table: 58)
+
+**Implementation**:
 ```sql
--- Canonical identity for deduplication
-canonical_persons (
-  id UUID PRIMARY KEY,
-  canonical_person_id UUID REFERENCES canonical_persons(id),
-  status VARCHAR(20) CHECK (status IN ('active', 'merged', 'deleted')),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+work_authorization VARCHAR(100) NOT NULL
+```
+```typescript
+// config/countries/us.json
+{
+  "work_authorization": [
+    "citizen", "permanent_resident", "h1b", "opt", "no_authorization"
+  ]
+}
 
--- Parent table for all user profiles
-user_profiles (
-  id UUID PRIMARY KEY,
-  person_id UUID REFERENCES canonical_persons(id),
-  tenant_id UUID REFERENCES tenants(id), -- FK resolved - tenant isolation boundary
-  profile_type VARCHAR(20) CHECK (profile_type IN ('candidate', 'employer', 'agency', 'platform')),
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  job_title VARCHAR(200),
-  auth_user_id UUID, -- Supabase auth integration
-  status VARCHAR(20) CHECK (status IN ('active', 'inactive', 'suspended')) DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Contact identifiers tied to specific profiles
-contact_identifiers (
-  id UUID PRIMARY KEY,
-  user_profile_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
-  type VARCHAR(20) CHECK (type IN ('email', 'phone', 'social')),
-  value TEXT NOT NULL,
-  is_primary BOOLEAN DEFAULT false,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  
-  -- Type validation constraints
-  CONSTRAINT valid_email CHECK (type != 'email' OR value ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-  CONSTRAINT valid_phone CHECK (type != 'phone' OR value ~ '^\+?[1-9]\d{1,14}$'),
-  CONSTRAINT valid_url CHECK (type != 'social' OR value ~ '^https?://')
-);
-
--- Audit trail for contact changes
-contact_history (
-  id UUID PRIMARY KEY,
-  contact_id UUID REFERENCES contact_identifiers(id),
-  old_value TEXT,
-  new_value TEXT NOT NULL,
-  changed_at TIMESTAMP DEFAULT NOW(),
-  changed_by_user_id UUID,
-  reason TEXT
-);
-
--- Type-specific profile details
-candidate_profiles (
-  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
-  skills JSONB,
-  education JSONB,
-  experience_years INTEGER,
-  green_card_status VARCHAR(50),
-  location VARCHAR(200),
-  preferences JSONB
-);
-
-employer_user_profiles (
-  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
-  department VARCHAR(100),
-  interviewer_flag BOOLEAN DEFAULT false,
-  hiring_permissions JSONB
-);
-
-agency_user_profiles (
-  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
-  commission_rate DECIMAL(5,2),
-  territory VARCHAR(200),
-  specializations JSONB
-);
-
-platform_user_profiles (
-  user_profile_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
-  admin_rights JSONB,
-  access_scope JSONB,
-  feature_permissions JSONB
-);
+// config/countries/uk.json  
+{
+  "work_authorization": [
+    "citizen", "settled_status", "tier2_visa", "student_visa", "no_authorization"
+  ]
+}
 ```
 
-### **Tenant/Role Management (3 tables):**
+**Scoring Analysis - Regional Variations**:
+| Factor | Weight | ENUM | App Constants | Lookup Table | JSON Config |
+|--------|---------|------|---------------|--------------|-------------|
+| **Regional Customization** | 5x | 1 (Single global set) | 2 (Prefix naming) | 4 (Country column) | 5 (Perfect fit) |
+| **International Expansion** | 4x | 1 (Hard to add countries) | 3 (Code changes) | 4 (New rows) | 5 (New files) |
+| **Change Likelihood** | 3x | 1 (Immigration law changes) | 3 (Code deploy) | 4 (DB updates) | 5 (File updates) |
+| **Developer Effort** | 4x | 4 (Simple base) | 4 (Prefix logic ~30 LOC) | 3 (Country joins ~60 LOC) | 3 (Config loading ~50 LOC) |
+| **Query Performance** | 3x | 5 (Direct comparison) | 4 (String matching) | 3 (Requires JOINs) | 4 (Memory cache) |
+
+**Why JSON Config Wins**: 
+- **Regional Flexibility**: Easy to add new countries without code changes
+- **Immigration Law Changes**: Common for work authorization, JSON files updated without deployment
+- **Expansion Speed**: New market = new config file, no schema changes
+- **Validation**: Application validates against appropriate country config
+
+**Key Assumptions**:
+- International expansion likely within 2 years
+- Immigration laws change 1-2x per year per country
+- Performance acceptable with in-memory config caching
+- Country-specific validation more important than referential integrity
+
+**Re-evaluation Trigger**: If >90% usage is single-country, reconsider App Constants approach
+
+---
+
+## 📊 **RESEARCHED DEFAULT VALUES BY PATTERN**
+
+### **Pattern 1 Fields (Company Customization) - Lookup Table Examples**
+
+**Starting Values for user_roles table**:
 ```sql
--- Primary tenant table
-tenants (
-  id UUID PRIMARY KEY,
-  tenant_type VARCHAR(20) CHECK (tenant_type IN ('employer', 'agency', 'platform')),
-  name VARCHAR(200) NOT NULL,
-  domains JSONB, -- ["company.com", "company.org"] - multiple domains support
-  settings JSONB, -- tenant-specific configurations
-  status VARCHAR(20) DEFAULT 'active',
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+-- Agency roles (companies customize these)
+INSERT INTO user_roles (company_id, role_name, description) VALUES
+  (agency_id, 'admin', 'Full administrative access'),
+  (agency_id, 'account_manager', 'Client relationship management'),
+  (agency_id, 'candidate_recruiter', 'Candidate sourcing and screening'),
+  (agency_id, 'recruiting_coordinator', 'Process coordination and scheduling');
 
--- Centralized role definitions per tenant (eliminates permission duplication)
-tenant_roles (
-  id UUID PRIMARY KEY,
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  role_name VARCHAR(100) NOT NULL, -- 'Admin', 'Senior Recruiter', 'Coordinator' (tenant-customizable)
-  permissions JSONB NOT NULL, -- {"can_edit_candidates": true, "can_view_reports": false}
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  
-  UNIQUE(tenant_id, role_name) -- prevent duplicate role names per tenant
-);
+-- Employer roles (companies customize these)  
+INSERT INTO user_roles (company_id, role_name, description) VALUES
+  (employer_id, 'admin', 'Full administrative access'),
+  (employer_id, 'hiring_manager', 'Job posting and candidate review'),
+  (employer_id, 'recruiter', 'Candidate sourcing and initial screening'),
+  (employer_id, 'hr_coordinator', 'Process management and compliance');
+```
 
--- User assignments to centralized roles (no permission duplication)
-user_role_assignments (
-  id UUID PRIMARY KEY,
-  user_profile_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  tenant_role_id UUID REFERENCES tenant_roles(id) ON DELETE CASCADE,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  
-  UNIQUE(user_profile_id, tenant_id, tenant_role_id)
-);
+### **Pattern 2 Fields (Global Standards) - Application Constants**
+
+**From Greenhouse + Competitor Research**:
+```typescript
+// Industry standard - rarely change
+const ACCOUNT_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive', 
+  SUSPENDED: 'suspended',
+  PENDING: 'pending_verification'
+} as const;
+
+const APPLICATION_STATUS = {
+  ACTIVE: 'active',
+  REJECTED: 'rejected', 
+  HIRED: 'hired',
+  CONVERTED: 'converted'  // hired → employee record
+} as const;
+
+const TENANT_TYPES = {
+  EMPLOYER: 'employer',
+  AGENCY: 'agency', 
+  PLATFORM: 'platform'
+} as const;
+
+const EXPERIENCE_LEVEL = {
+  ENTRY: 'entry',
+  MID: 'mid',
+  SENIOR: 'senior', 
+  STAFF: 'staff',
+  PRINCIPAL: 'principal',
+  EXECUTIVE: 'executive'
+} as const;
+
+const CONTACT_TYPES = {
+  EMAIL: 'email',
+  PHONE: 'phone',
+  LINKEDIN: 'linkedin',
+  GITHUB: 'github', 
+  TWITTER: 'twitter',
+  PORTFOLIO: 'portfolio',
+  WEBSITE: 'website'
+} as const;
+
+const JOB_TYPE = {
+  FULL_TIME: 'full-time',
+  PART_TIME: 'part-time', 
+  CONTRACT: 'contract',
+  INTERNSHIP: 'internship',
+  TEMPORARY: 'temporary'
+} as const;
+
+const INTERVIEW_TYPE = {
+  PHONE: 'phone',
+  VIDEO: 'video',
+  IN_PERSON: 'in-person',
+  TECHNICAL: 'technical', 
+  PANEL: 'panel'
+} as const;
+
+const INTERVIEW_STATUS = {
+  SCHEDULED: 'scheduled',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled', 
+  NO_SHOW: 'no_show'
+} as const;
+```
+
+### **Pattern 3 Fields (Regional/Expansion) - JSON Config**
+
+**US Market (MVP)**:
+```json
+// config/countries/us.json
+{
+  "work_authorization": [
+    "citizen",
+    "permanent_resident", 
+    "h1b",
+    "opt",
+    "no_authorization"
+  ],
+  "education_level": [
+    "high_school",
+    "associates", 
+    "bachelors",
+    "masters",
+    "phd"
+  ]
+}
+```
+
+**UK Market (Future)**:
+```json
+// config/countries/uk.json  
+{
+  "work_authorization": [
+    "citizen",
+    "settled_status",
+    "tier2_visa", 
+    "student_visa",
+    "no_authorization"
+  ],
+  "education_level": [
+    "secondary",
+    "a_levels",
+    "bachelors", 
+    "masters", 
+    "phd"
+  ]
+}
 ```
 
 ---
 
-## 🔍 **FINAL ARCHITECTURE AUDIT - ALL RELATIONSHIPS (14 TABLES)**
+## 🎯 **PATTERN DECISION FRAMEWORK SUMMARY**
 
-### **✅ FK DEPENDENCY VALIDATION:**
+### **How to Choose the Right Pattern:**
 
-**Person/Identity Layer (4 tables):**
-1. `user_profiles.person_id` → `canonical_persons.id` ✅
-2. `user_profiles.tenant_id` → `tenants.id` ✅
-3. `contact_identifiers.user_profile_id` → `user_profiles.id` ✅
-4. `contact_history.contact_id` → `contact_identifiers.id` ✅
-5. `candidate_profiles.user_profile_id` → `user_profiles.id` ✅
-6. `employer_user_profiles.user_profile_id` → `user_profiles.id` ✅
-7. `agency_user_profiles.user_profile_id` → `user_profiles.id` ✅
-8. `platform_user_profiles.user_profile_id` → `user_profiles.id` ✅
+**1. Ask: "Does each company need different values?"**
+- ✅ YES → **Pattern 1: Lookup Tables** 
+- ❌ NO → Continue to question 2
 
-**Tenant/Role Layer (3 tables):**
-9. `tenant_roles.tenant_id` → `tenants.id` ✅
-10. `user_role_assignments.user_profile_id` → `user_profiles.id` ✅
-11. `user_role_assignments.tenant_id` → `tenants.id` ✅
-12. `user_role_assignments.tenant_role_id` → `tenant_roles.id` ✅
+**2. Ask: "Do values vary by country/region?"**  
+- ✅ YES → **Pattern 3: JSON Config**
+- ❌ NO → **Pattern 2: Application Constants**
 
-**Jobs Layer (1 table):**
-13. `jobs.tenant_id` → `tenants.id` ✅
-14. `jobs.created_by_user_id` → `user_profiles.id` ✅
+### **Pattern Characteristics:**
 
-**Submissions Layer (1 table):**
-15. `submissions.tenant_id` → `tenants.id` ✅
-16. `submissions.job_id` → `jobs.id` ✅
-17. `submissions.candidate_profile_id` → `candidate_profiles.user_profile_id` ✅
-18. `submissions.submitted_by_user_id` → `user_profiles.id` ✅
+| Pattern | Customization | Change Frequency | Performance | Complexity |
+|---------|---------------|------------------|-------------|------------|
+| **1: Lookup Tables** | Company-level | Medium (business driven) | Good (JOINs) | High (FK relationships) |
+| **2: App Constants** | None | Low (industry standard) | Excellent (direct) | Low (simple validation) |
+| **3: JSON Config** | Regional | Medium (regulatory) | Good (memory cache) | Medium (file management) |
 
-### **✅ TENANT ISOLATION VERIFICATION:**
-- **Primary isolation**: All business tables have `tenant_id` field ✅
-- **Derived isolation**: Child profile tables inherit via `user_profiles.tenant_id` ✅
-- **RLS enforcement**: Database can enforce `tenant_id = current_tenant` on all sensitive data ✅
-- **No cross-tenant leakage**: FK chains maintain tenant boundaries ✅
+### **When Patterns Fail - Red Flags:**
 
-### **✅ BUSINESS LOGIC VALIDATION:**
-- **Person deduplication**: `canonical_persons` supports merge/split operations ✅
-- **Multi-profile users**: person can have multiple `user_profiles` across tenants ✅
-- **Role management**: centralized `tenant_roles` eliminate permission duplication ✅
-- **Job lifecycle**: complete draft→active→paused→closed→filled/cancelled flow ✅
-- **Submission workflow**: stage/status/interview progression tracking ✅
-- **Conflict prevention**: unique constraint prevents duplicate submissions ✅
-- **Search/filter**: JSONB fields + search_vector for performance ✅
+**Pattern 1 → 2**: If 90%+ companies use identical values, switch to App Constants  
+**Pattern 2 → 1**: If companies request customization, switch to Lookup Tables  
+**Pattern 2 → 3**: If international markets require different values, switch to JSON Config  
+**Pattern 3 → 2**: If 90%+ usage is single region, switch to App Constants
 
-### **✅ DATA INTEGRITY VERIFICATION:**
-- **No orphaned records**: All FK relationships have proper CASCADE/RESTRICT rules ✅
-- **Canonical consistency**: Person deduplication via `canonical_person_id` chain ✅
-- **Multi-profile consistency**: Contact identifiers linked to specific user profiles ✅
-- **Submission consistency**: Cannot submit same candidate twice to same job by same tenant ✅
+This framework prevents architecture flip-flopping by providing clear decision criteria and triggers for re-evaluation.
 
-**ARCHITECTURE AUDIT COMPLETE: ALL 18 FK RELATIONSHIPS VALID** ✅
+### **Pattern 4: Default Value Strategy**
+
+**Design Rule**: Always distinguish "no data entered" from "explicitly unknown"
+
+**Implementation**:
+- **Database Default**: `NULL` (indicates incomplete/missing data)
+- **UI Behavior**: `NULL` displays as "Select..." placeholder requiring user action  
+- **Explicit "Unknown"**: User must consciously choose when they don't know
+- **Why**: Enables data quality tracking and follow-up workflows
+
+**Example**:
+```sql
+work_authorization VARCHAR(100) DEFAULT NULL -- NULL = incomplete profile
+-- vs 'Unknown' = candidate chose "Unknown" option
+```
+
+### **Pattern 5: Configuration File Organization**
+
+**Design Rule**: Organize by business domain, not technical structure
+
+**Directory Structure**:
+```
+src/config/
+├── work-auth/           # One file per country for regulatory differences
+│   ├── us.json
+│   ├── uk.json
+│   └── canada.json
+├── currencies/          # Global financial standards
+├── locations/           # Geographic hierarchies  
+└── job-categories/      # Industry classifications
+```
+
+## 🗂️ **COMPLETE FINALIZED SCHEMA (All Locked Tables)**
+
+### **COMPLETE DATABASE SCHEMA**
+
+**Implementation Details**: All CREATE TABLE statements, field specifications, and SQL code have been moved to:
+`/Users/april/10x10-Repos/claude-common/docs/Architecture/Complete-Database-Field-Specifications.md`
+
+**This document contains only architectural decisions and rationale. See implementation file for:**
+- Complete CREATE TABLE statements for all 14 tables
+- Detailed field specifications and constraints
+- Application constants and regional configuration examples
+- Performance optimization indexes
+- FK relationship validation
+
+## 🔍 **FINAL ARCHITECTURE VALIDATION**
+
+**Complete Schema Audit**: All 14 tables with 18 FK relationships validated ✅
+
+**Architecture Verification Status**:
+- **✅ FK Dependencies**: All foreign key relationships resolved and validated
+- **✅ Tenant Isolation**: Database-level RLS prevents cross-tenant data leaks
+- **✅ Business Logic**: Complete workflow support (person→job→submission→hiring)
+- **✅ Data Integrity**: Canonical deduplication + constraint-based conflict prevention
+- **✅ Multi-Profile Support**: Same person across multiple tenants/organizations
+- **✅ Centralized Permissions**: Role-based access without duplication
+
+**Detailed validation results available in**: `Complete-Database-Field-Specifications.md`
 
 ---
 
 ## 🏛️ **FINAL HIGH-LEVEL ARCHITECTURE REVIEW**
 
 ### **📊 COMPLETE SCHEMA SUMMARY:**
-
-**14 Tables | 4 Layers | 18 FK Relationships | Multi-Tenant Architecture**
-
-| **Layer** | **Tables** | **Purpose** | **Key Features** |
-|-----------|-----------|-------------|------------------|
-| **Person/Identity** | 4 tables | Canonical identity + deduplication | Multi-profile support, contact audit trail |
-| **Tenant/Role** | 3 tables | Multi-tenant isolation + permissions | Centralized roles, RLS security |
-| **Jobs** | 1 table | Employment opportunities | Full lifecycle, future-proof access model |
-| **Submissions** | 1 table | Core business process | Stage/status/interview tracking |
 
 ### **🎯 ARCHITECTURE STRENGTHS:**
 
@@ -1143,7 +1224,76 @@ SELECT tr.* FROM tenant_roles tr WHERE tr.location_id IN (SELECT id FROM locatio
 - [ ] **Extension strategy** - design Phase I simple, Phase II complex
 - [ ] **Security boundaries** - identify tenant vs intra-tenant isolation needs
 
-**STATUS**: Architecture complete - 12 tables locked, ready for job table design
+### **Decision: Experience Levels Architecture (2025-08-21)**
+
+**Decision**: 
+- **Application Constants** for Phase I with 8 platform-normalized levels
+- **Platform normalization** for cross-tenant sourcing compatibility
+- **Phase II tenant customization** via lookup table mapping to platform levels
+
+**Platform Default Experience Levels**:
+```typescript
+const PLATFORM_EXPERIENCE_LEVELS = {
+  'intern': { name: 'Intern', sort_order: 1, years_min: 0, years_max: 1 },
+  'junior': { name: 'Junior', sort_order: 2, years_min: 0, years_max: 2 },
+  'mid': { name: 'Mid', sort_order: 3, years_min: 3, years_max: 6 },
+  'senior': { name: 'Senior', sort_order: 4, years_min: 7, years_max: 12 },
+  'staff': { name: 'Staff', sort_order: 5, years_min: 8, years_max: 15 },
+  'manager': { name: 'Manager', sort_order: 6, years_min: 5, years_max: 20 },
+  'director': { name: 'Director', sort_order: 7, years_min: 10, years_max: 25 },
+  'exec': { name: 'Executive', sort_order: 8, years_min: 15, years_max: 50 }
+} as const;
+```
+
+**Schema Implementation**:
+```sql
+-- candidate_profiles table
+experience_level VARCHAR(20) CHECK (experience_level IN (
+  'intern', 'junior', 'mid', 'senior', 'staff', 'manager', 'director', 'exec'
+)) DEFAULT NULL,
+years_experience DECIMAL(4,1),
+experience_last_updated DATE DEFAULT CURRENT_DATE,
+experience_notes TEXT
+```
+
+**Research Foundation**:
+- **LinkedIn standard**: 7 categories (Internship, Entry Level, Associate, Mid-Senior Level, Director, Executive, Not Applicable)
+- **Other ATS**: Custom fields, no standardized categories (Greenhouse, Ashby, Bullhorn)
+- **Auto-aging**: No ATS platforms automatically update experience - all require manual updates
+- **Sourcing requirements**: Platform normalization needed for cross-tenant candidate matching
+
+**Design Rationale**:
+1. **Platform Normalization**: "Senior" means same thing across all tenants for sourcing
+2. **Tenant Flexibility**: Phase II allows custom labels that map to platform levels
+3. **Tech Industry Focus**: Added "Staff" level for senior individual contributors
+4. **Management Track**: Separate "Manager" from IC progression
+5. **Fractional Support**: DECIMAL(4,1) supports bootcamp graduates (1.5 years)
+
+**Phase II Extension Design**:
+```sql
+-- Future tenant customization (Phase II)
+CREATE TABLE tenant_experience_levels (
+  tenant_id UUID REFERENCES tenants(id),
+  platform_key VARCHAR(20), -- Maps to PLATFORM_EXPERIENCE_LEVELS
+  custom_label VARCHAR(100), -- "L5 Engineer", "Senior SWE"
+  is_active BOOLEAN DEFAULT true
+);
+```
+
+**Alternatives Considered & Rejected**:
+- **LinkedIn 7-level copy**: Missing tech industry granularity (no "Staff" level)
+- **Lookup tables from start**: Over-engineered for MVP, 90% tenants use defaults
+- **Years-based auto-calculation**: Too subjective, no ATS platforms do this
+
+**Key Assumptions**:
+- 90% of tenants will use platform defaults without customization
+- Experience level is manual selection, not calculated from years
+- Platform normalization more important than tenant branding for MVP
+- Tech companies need "Staff" level distinction for senior ICs
+
+**DECISION MARKED AS FINAL** - 8-level platform standard with Phase II customization path
+
+**STATUS**: Architecture complete - 12 tables locked, experience levels decided, ready for job table design
 
 ⸻
 

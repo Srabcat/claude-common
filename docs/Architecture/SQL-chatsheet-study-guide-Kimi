@@ -340,3 +340,158 @@ Normalization helps reduce redundancy and improve data integrity, but it should 
 ### Study and Test
 
 Take some time to study the cheat sheet and practice the questions. Once you feel confident, let me know, and I'll give you a test to assess your understanding. Good luck!
+--------
+Absolutely, here’s a comprehensive cheat sheet summarizing all the key topics we’ve covered so far:
+
+### React and Supabase Cheat Sheet
+
+#### 1. **React**
+- A JavaScript library for building user interfaces, focusing on reusable components and efficient state management.
+
+#### 2. **useState**
+- A React Hook that allows you to add state to functional components, enabling dynamic updates to the UI.
+```javascript
+const [state, setState] = useState(initialValue);
+```
+
+#### 3. **Props**
+- Props are used to pass data from parent components to child components in a unidirectional flow, ensuring predictable data management.
+
+#### 4. **Context API**
+- The Context API allows you to share values like state across components without having to pass props down manually at every level.
+```javascript
+const MyContext = React.createContext();
+```
+
+#### 5. **Custom Hooks**
+- Custom Hooks are reusable functions that encapsulate stateful logic, allowing you to share functionality across components.
+```javascript
+function useCustomHook() {
+  const [state, setState] = useState();
+  // Custom logic
+  return state;
+}
+```
+
+#### 6. **Higher-Order Components (HOCs)**
+- HOCs are functions that take a component and return a new component, enabling you to reuse component logic.
+```javascript
+function withHOC(WrappedComponent) {
+  return function EnhancedComponent(props) {
+    // Add additional props or logic
+    return <WrappedComponent {...props} />;
+  };
+}
+```
+
+#### 7. **Render Props**
+- Render Props is a pattern where a component takes a function as a prop and calls it with data, allowing you to reuse component logic with different renderings.
+```javascript
+function MyComponent({ render }) {
+  const data = 'some data';
+  return render(data);
+}
+```
+
+#### 8. **Zustand**
+- Zustand is a lightweight state management library that provides a simple and flexible way to manage global state in React applications.
+```javascript
+import create from 'zustand';
+const useStore = create((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+}));
+```
+
+#### 9. **Next.js**
+- Next.js is a React framework that supports server-side rendering (SSR), static site generation (SSG), and incremental static regeneration (ISR), enhancing performance and SEO.
+```javascript
+// pages/index.js
+export async function getServerSideProps() {
+  // Fetch data from an API
+  return { props: { data } };
+}
+```
+
+#### 10. **Supabase**
+- Supabase is a backend-as-a-service (BaaS) that provides real-time subscriptions, row-level security, and auto-generated APIs, simplifying backend development.
+```javascript
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
+
+#### 11. **File Storage in Supabase**
+- Supabase offers a global CDN, image transformations, resumable uploads, and fine-grained access control for storing and serving files.
+```javascript
+const { data, error } = await supabase.storage.from('bucket').upload('file.png', file);
+```
+
+#### 12. **Vector Database in Supabase**
+- Supabase integrates vector embeddings with relational data, enabling semantic search and advanced matching capabilities for AI-powered applications.
+```sql
+CREATE TABLE embeddings (id SERIAL PRIMARY KEY, text TEXT, embedding VECTOR(128));
+```
+
+#### 13. **Preprocessing and Synonyms**
+- Combining a curated list of synonyms with the capabilities of large language models (LLMs) ensures accurate and dynamic understanding of terms.
+```javascript
+const curatedSynonyms = { 'MIT': ['Massachusetts Institute of Technology'] };
+```
+
+#### 14. **Embedding Storage**
+- Storing embeddings in the same table as the candidate can simplify the schema and improve performance for certain queries, especially if the table has fewer than 100 columns.
+```sql
+CREATE TABLE candidates (id SERIAL PRIMARY KEY, name TEXT, skills_embedding VECTOR(128));
+```
+
+#### 15. **Indexing**
+- Indexing critical columns, especially those used in frequent queries and similarity searches, can significantly improve query performance.
+```sql
+CREATE INDEX idx_skills_embedding ON candidates USING GIST (skills_embedding);
+```
+
+#### 16. **Real-Time Updates in Supabase**
+- Supabase provides real-time subscriptions to database changes, allowing you to update your front-end application dynamically.
+```javascript
+const channel = supabase
+  .channel('realtime-jobs')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'jobs',
+    },
+    (payload) => {
+      // Handle real-time update
+    }
+  )
+  .subscribe();
+```
+
+#### 17. **Version Control**
+- Implement version control in your database to notify users of new updates.
+```sql
+ALTER TABLE jobs ADD COLUMN version SERIAL;
+CREATE TRIGGER increment_job_version BEFORE UPDATE ON jobs FOR EACH ROW EXECUTE FUNCTION increment_version();
+```
+
+#### 18. **Checking for Updates**
+- Periodically check the version number in the database to notify users of new updates.
+```javascript
+useEffect(() => {
+  const checkForUpdates = async () => {
+    const { data, error } = await supabase.from('jobs').select('version').order('version', { ascending: false }).limit(1);
+    if (error) console.error(error);
+    if (data && data[0].version > version) {
+      alert('New version available. Please refresh the page.');
+    }
+  };
+
+  const intervalId = setInterval(checkForUpdates, 60000); // Check every minute
+
+  return () => clearInterval(intervalId);
+}, [version]);
+```
+
+This cheat sheet should serve as a quick reference for the key concepts and practices we’ve discussed. Feel free to save and refer back to it as needed!
