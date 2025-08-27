@@ -11,13 +11,16 @@
 
 ## What This Does
 1. **Stage all changes**: `git add .`
-2. **Commit with pattern**: `git commit -m "checkpoint: [name] working"`
-3. **Continue development** - stay in current mode (prototype vs pr-ready)
+2. **Commit with custom message**: `git commit -m "$ARGUMENTS"`
+3. **Push to cloud**: `git push origin main`
+4. **Continue development** - stay in current mode (prototype vs pr-ready)
 
-## Checkpoint Strategy
-- **Small, testable pieces** - each checkpoint = one working sub-feature
-- **Descriptive names** - what specific functionality works now
-- **Frequent saves** - don't lose work, easy rollback
+## Commands to Execute
+```bash
+git add .
+git commit -m "$ARGUMENTS"
+git push origin main
+```
 
 ## View Checkpoints
 ```bash
