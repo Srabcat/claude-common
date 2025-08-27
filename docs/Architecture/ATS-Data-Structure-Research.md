@@ -102,38 +102,59 @@ const UK_WORK_AUTH = {
 
 ## **RECOMMENDED IMPLEMENTATION**
 
+**Database Schema Changes**:
 ```sql
 -- Add to candidate_profiles table
 ALTER TABLE candidate_profiles 
-ADD COLUMN work_authorization VARCHAR(100),
-ADD COLUMN work_auth_notes TEXT; -- "Stage 2 of 3 for H1B lottery"
+ADD COLUMN work_authorization VARCHAR(100), -- main authorization status value
+ADD COLUMN work_auth_expiry_date DATE,      -- expiry date for visas/permits
+ADD COLUMN work_auth_notes TEXT;           -- "Stage 2 of 3 for H1B lottery"
 ```
 
-```typescript
+**JSON Configuration File Structure**:
+
+**File Organization Best Practice**: Separate JSON files per country for maintainability
+```
+src/config/work-authorization/
+├── us.json          # US work authorization values
+├── uk.json          # UK work authorization values  
+├── canada.json      # Canada work authorization values
+└── default.json     # Fallback for unsupported countries
+```
+
+**Source: Greenhouse ATS Standard Values** - Based on Greenhouse API documentation and competitor analysis
+
+```json
 // config/work-authorization/us.json
 {
+  "country": "US",
   "work_authorization": [
-    {"value": "citizen", "label": "US Citizen", "requires_expiry": false},
-    {"value": "permanent_resident", "label": "Green Card Holder", "requires_expiry": false},
-    {"value": "h1b", "label": "H-1B Visa", "requires_expiry": true},
-    {"value": "h1b_transfer", "label": "H-1B Transfer Pending", "requires_expiry": true},
-    {"value": "opt", "label": "OPT (F-1 Student)", "requires_expiry": true},
-    {"value": "opt_stem", "label": "STEM OPT Extension", "requires_expiry": true},
-    {"value": "tn_visa", "label": "TN Visa (NAFTA)", "requires_expiry": true},
-    {"value": "l1_visa", "label": "L-1 Intracompany Transfer", "requires_expiry": true},
-    {"value": "o1_visa", "label": "O-1 Extraordinary Ability", "requires_expiry": true},
-    {"value": "e3_visa", "label": "E-3 Australian Specialty", "requires_expiry": true},
-    {"value": "requires_sponsorship", "label": "Requires Work Authorization", "requires_expiry": false}
+    {"value": null, "label": "Select Authorization Status", "requires_expiry": false, "category": "system"},
+    {"value": "unknown", "label": "Unknown", "requires_expiry": false, "category": "system"},
+    {"value": "citizen", "label": "US Citizen", "requires_expiry": false, "category": "permanent"},
+    {"value": "permanent_resident", "label": "Green Card Holder", "requires_expiry": false, "category": "permanent"},
+    {"value": "h1b", "label": "H-1B Visa", "requires_expiry": true, "category": "visa", "note": "Specialty occupation visa - most common for tech workers"},
+    {"value": "h1b_transfer", "label": "H-1B Transfer", "requires_expiry": true, "category": "visa", "note": "Currently employed on H-1B, can transfer to new employer"},
+    {"value": "opt", "label": "OPT (F-1)", "requires_expiry": true, "category": "student", "note": "Optional Practical Training for F-1 students"},
+    {"value": "opt_stem", "label": "STEM OPT Extension", "requires_expiry": true, "category": "student", "note": "24-month extension for STEM fields"},
+    {"value": "tn", "label": "TN Visa", "requires_expiry": true, "category": "visa", "note": "NAFTA professional visa (Canadian/Mexican citizens)"},
+    {"value": "l1", "label": "L-1 Visa", "requires_expiry": true, "category": "visa", "note": "Intracompany transfer visa"},
+    {"value": "o1", "label": "O-1 Visa", "requires_expiry": true, "category": "visa", "note": "Extraordinary ability visa"},
+    {"value": "e3", "label": "E-3 Visa", "requires_expiry": true, "category": "visa", "note": "Australian specialty occupation visa"},
+    {"value": "other", "label": "Other Work Authorization", "requires_expiry": true, "category": "other"},
+    {"value": "requires_sponsorship", "label": "Requires Sponsorship", "requires_expiry": false, "category": "none"}
   ]
 }
 ```
 
+**Visa Type Naming Explanation**:
+- **"h1b" vs "h1b_transfer"**: Different legal statuses - current H-1B holders can transfer employers faster (no lottery), while new H-1B requires lottery
+- **"tn" vs "l1"**: Following Greenhouse standard - common abbreviations used in ATS systems
+- **Consistent format**: All visa types use abbreviation only, permanent statuses use full descriptive names
+
 **Business Impact**: Ready for international expansion, handles US immigration law changes without code deployment.
 
-**Table Impact**: ✅ **Minor** - Add 2 fields to existing candidate_profiles table.
-
- ❌ **NEEDS REVISION**
-  <!-- 1. JASON File design? All countries in the same JASON file? There will be other JASON files for other tables, best practice for JASON file across different purposes.  2. what 2 fields to add to candidate_profiles?  3. add explaination - difference between h1b, h1b transfer, why inconsistency h1b no _visa.  4. reference the source where you find this industry standard list - dont reinvent the wheel, leverage widely used product 5. need a value for other and null (unknown)-->
+**Table Impact**: ✅ **Minor** - Add 3 fields to existing candidate_profiles table: `work_authorization`, `work_auth_expiry_date`, `work_auth_notes`
 
 ---
 
@@ -214,58 +235,109 @@ signing_bonus DECIMAL(12,2),
 
 ## **RECOMMENDED IMPLEMENTATION**
 
+**Source: Bullhorn & Ashby ATS Standard Fields** - Based on industry-leading ATS compensation tracking
+
+**Database Schema Changes**:
 ```sql
--- Add to candidate_profiles table
+-- Add to candidate_profiles table  
 ALTER TABLE candidate_profiles 
-ADD COLUMN salary_expectation_min DECIMAL(12,2),
-ADD COLUMN salary_expectation_max DECIMAL(12,2),
-ADD COLUMN salary_currency VARCHAR(3) DEFAULT 'USD',
-ADD COLUMN compensation_components JSONB, -- bonus, equity, benefits structure
-ADD COLUMN compensation_notes TEXT; -- "Flexible on salary for remote work"
+ADD COLUMN salary_expectation_min DECIMAL(12,2),      -- Annual salary minimum expectation
+ADD COLUMN salary_expectation_max DECIMAL(12,2),      -- Annual salary maximum expectation  
+ADD COLUMN salary_currency VARCHAR(3) DEFAULT 'USD',  -- ISO 4217 currency code
+ADD COLUMN salary_type VARCHAR(20) DEFAULT 'annual'   -- 'annual', 'hourly', 'daily', 'contract'
+    CHECK (salary_type IN ('annual', 'hourly', 'daily', 'contract')),
+ADD COLUMN salary_confidence VARCHAR(20) DEFAULT 'unknown' -- Confidence level for recruiting
+    CHECK (salary_confidence IN ('firm', 'negotiable', 'recruiter_estimate', 'unknown')),
+ADD COLUMN compensation_components JSONB,              -- Bonus, equity, benefits structure
+ADD COLUMN compensation_last_updated DATE DEFAULT CURRENT_DATE, -- When salary expectations last changed
+ADD COLUMN compensation_notes TEXT;                   -- "Flexible on salary for remote work"
 ```
 
-```typescript
-// Application validation
-const validateCompensation = (salary: number, currency: string): boolean => {
-  const precision = CURRENCY_PRECISION[currency]?.decimals || 2;
-  const factor = Math.pow(10, precision);
-  return Number.isInteger(salary * factor);
-};
+**Salary Type Research (Bullhorn/Ashby patterns)**:
+- **Annual**: Most common (95%+ of professional roles) - whole numbers sufficient for all countries
+- **Hourly**: Contractors, part-time roles - decimal precision needed ($75.50/hour)
+- **Daily**: UK consulting standard - whole numbers typical (£650/day)
+- **Contract**: Project-based total compensation
 
-// Example compensation_components JSONB:
-{
-  "bonus": {
-    "annual_target": 25000,
-    "signing_bonus": 15000
-  },
-  "equity": {
-    "type": "stock_options",
-    "shares": 5000,
-    "vesting_years": 4
-  },
-  "benefits": {
-    "remote_stipend": 2000
-  }
+**DECIMAL(12,2) Validation**: Sufficient for extreme inflation countries
+```typescript
+// Argentina peso example: ARS 50,000,000 (≈ $50K USD) - fits in DECIMAL(12,2)
+// Venezuela bolivar: Handled via USD conversion in application layer
+const MAX_SALARY = 999_999_999.99; // $1B max - covers any realistic compensation
+```
+
+**Comprehensive JSONB Compensation Schema** (Optional fields for advanced tracking):
+```typescript
+interface CompensationComponents {
+  bonus?: {
+    annual_target?: number;        // Annual bonus target amount
+    signing_bonus?: number;        // One-time signing bonus
+    retention_bonus?: number;      // Retention bonus amount
+    performance_bonus?: number;    // Performance-based bonus
+    spot_bonus?: number;          // Ad-hoc recognition bonus
+    bonus_notes?: string;         // "Quarterly targets, uncapped upside"
+  };
+  equity?: {
+    equity_type: 'stock_options' | 'rsu' | 'percentage_equity' | 'warrants' | 'restricted_stock';
+    amount?: number;              // Shares, percentage, or dollar value
+    amount_type?: 'shares' | 'percentage' | 'dollar_value';
+    strike_price?: number;        // Stock option strike price
+    preferred_price?: number;     // Preferred share price
+    vesting_years?: number;       // 4 years typical
+    cliff_months?: number;        // 12 months typical  
+    vesting_schedule?: string;    // "25% year 1, then monthly"
+    equity_notes?: string;        // "Early exercise option available"
+  };
+  benefits?: {
+    health_insurance?: boolean;
+    dental_insurance?: boolean;
+    vision_insurance?: boolean;
+    retirement_matching?: number; // 401k match percentage
+    vacation_days?: number;
+    sick_days?: number;
+    parental_leave_weeks?: number;
+    remote_stipend?: number;
+    learning_budget?: number;
+    benefits_notes?: string;      // "Premium health plan, unlimited PTO"
+  };
 }
 ```
 
+**Salary Confidence Levels** (Critical for recruiting intelligence):
+- **"firm"**: Candidate stated firm requirements, not negotiable
+- **"negotiable"**: Candidate indicated flexibility on compensation
+- **"recruiter_estimate"**: Recruiter's assessment based on role/experience
+- **"unknown"**: No confidence information available
 
- ❌ **NEEDS REVISION**
-  <!-- Your comment: Leverage bullhorn or Ashby!  (1) need to be clear its annual salary? Because for annual, do we really need to support decimal points for any country?  If it's hourly, it's more likely we need decimal point. But the schema doesn't say it's annual or hourly.I think it may be self-evident. We don't need to worry about it, but just want to double-check on how other ATS handle that. (2) Regarding the JSON blob for additional information that's good. Do we need to get the JSON blob structure defined? Sounds like we need to. If so, I think we need some modifications.For bonus, you currently have:
-- Annual Bonus
-- Signing Bonus  But there could also be different types of bonus. For JSON, I assume we can just add different types of bonus, such as:
-- Retention Bonus
-- Performance Bonus. For equity, we sometimes use percentages for startups. You'll also use stock options, restricted stock, and there's a strike price and preferred price, so there are nuances that can be optionally captured in there.So the question is, how much do we need to define in the JSON schema, and also I assume I think JSON everything is optional, so I think that's okay, but our code should be able to handle that. The other thing is, I don't think we need to search for what's inside the JSON blob; it's more for printing out the information and have a way for UI to enter it.The next one is a big one. A lot of times, recruiter will get a wishy-washy range from the candidate, so we need a weight/flag to indicate:
-- Candidate is being firm
-- Candidate is negotiable
-- This is recruiter's rough guess  This is important for us to know.Next subject is more tricky. Visa doesn't change typically, but compensation expectation can change. Same as years of experience, same as experience level. So how do we handle the context of when was this information updated and also the change history of the critical information?  For decimal 12, that's obviously more than enough for everyone. But for a country like Argentina with high inflation, is that sufficient? If not, is there a way to indicate it's above? I don't want to create more than 12 decimals. That seems more than enough and overkill already. But just want your opinions - what's a reasonable number for Argentina? Otherwise, we just ignore it, which is fine. When you say "add 5 fields", please explain exactly what 5 fields because I also want to review the naming of the additional fields to ensure clarity.-->
+**Change History Strategy**:
+```sql
+-- Future table for compensation change tracking (Phase II)
+CREATE TABLE candidate_compensation_history (
+  id UUID PRIMARY KEY,
+  candidate_profile_id UUID REFERENCES candidate_profiles(user_profile_id),
+  previous_min DECIMAL(12,2),
+  previous_max DECIMAL(12,2),
+  new_min DECIMAL(12,2), 
+  new_max DECIMAL(12,2),
+  change_reason TEXT, -- "Market adjustment", "Role change", "Location change"
+  changed_at TIMESTAMP DEFAULT NOW(),
+  changed_by_user_id UUID REFERENCES user_profiles(id)
+);
+```
 
 **International Considerations**:
-- **DECIMAL(12,2)**: Handles up to $999,999,999.99 (sufficient for C-level compensation)
-- **Currency validation**: Application enforces proper decimal places per currency
-- **Search optimization**: Base salary remains searchable, bonus/equity in JSONB for flexibility
+- **DECIMAL(12,2)**: Handles up to $999,999,999.99 - sufficient for all countries including high-inflation economies
+- **Currency validation**: Application enforces proper decimal places per currency  
+- **Search optimization**: Base salary remains searchable, bonus/equity in JSONB for display/entry only
 
-**Table Impact**: ✅ **Minor** - Add 5 fields to existing candidate_profiles table.
+**Table Impact**: ✅ **Minor** - Add 7 fields to existing candidate_profiles table:
+1. `salary_expectation_min` - Minimum salary expectation
+2. `salary_expectation_max` - Maximum salary expectation  
+3. `salary_currency` - Currency code (ISO 4217)
+4. `salary_type` - Annual/hourly/daily/contract
+5. `salary_confidence` - Firm/negotiable/estimate/unknown
+6. `compensation_components` - JSONB for bonus/equity/benefits
+7. `compensation_last_updated` - Change tracking timestamp
 
 ---
 

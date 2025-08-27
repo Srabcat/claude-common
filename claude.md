@@ -56,7 +56,8 @@ Cross-repository coordination and universal development guidelines for 10x10 rec
 - Platform-wide architecture goes in shared locations, not duplicated per repo
 - Technology-specific guidance stays in relevant repositories
 - Cross-references prevent duplication while maintaining context
-- Always start with what you think the desired output is, and verify the output before you go down to the weeds. 
+- Always start with what you think the desired output is, and verify the output before you go down to the weeds.
+- **GOLDEN RULE: NEVER create duplicate files** - Every duplicate file created is wasted effort that must later be cleaned up. Always establish single source of truth from the beginning.
 
 ## Repository Structure
 

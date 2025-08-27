@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Sync End Template - Save progress before session ends
+# Usage: /sync-end
+# Adapt PROJECT_NAME and TODO_FILE for your project
+
+PROJECT_NAME="[YOUR_PROJECT_NAME]"
+TODO_FILE="PROJECT-TODO.md"  # Adapt to your project's todo file
+
+echo "💾 SESSION END SYNC"
+echo "==================="
+echo ""
+
+echo "🎯 PROGRESS TO SAVE:"
+echo "   Tell Claude: 'Update $TODO_FILE with completed work'"
+echo "   This saves: Current session progress to permanent file"
+echo "   Without save: Session work will be lost"
+echo ""
+
+# Show what might need updating
+if [ -f "$TODO_FILE" ]; then
+    echo "📋 Framework Section to Update:"
+    echo "   Look for: '## AI-First Development Framework Setup'"
+    echo "   Mark completed tasks as: [x] instead of [ ]"
+    echo ""
+    
+    echo "🔄 Current Incomplete Tasks:"
+    grep -A 30 "## AI-First Development Framework Setup" "$TODO_FILE" | \
+    grep "^- \[ \]" | head -3 | sed 's/^/   /'
+    echo ""
+    
+    echo "📝 Don't forget to update:"
+    echo "   • Any tasks you completed this session"
+    echo "   • Any blockers or decisions made"
+    echo "   • Any new tasks discovered"
+else
+    echo "❌ $TODO_FILE not found - cannot save progress"
+fi
+
+echo ""
+echo "💡 SAVE COMMANDS:"
+echo "   'Update $TODO_FILE with completed work'"
+echo "   'Mark [specific task] as done in $TODO_FILE'"
+echo ""
+
+echo "🔚 For clean handoff to next session:"
+echo "   Ensure $TODO_FILE reflects current reality"

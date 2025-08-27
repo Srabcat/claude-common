@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Sync Start Template - Session continuity reminder
+# Usage: /sync-start
+# Adapt PROJECT_NAME and TODO_FILE for your project
+
+PROJECT_NAME="[YOUR_PROJECT_NAME]"
+TODO_FILE="PROJECT-TODO.md"  # Adapt to your project's todo file
+
+echo "🔄 SESSION SYNC REQUIRED"
+echo "======================="
+echo ""
+
+echo "🧠 AI CONTEXT LOADING:"
+echo "   Say exactly: 'Load $TODO_FILE status and sync todos'"
+echo "   This loads: AI-First Development Framework progress"
+echo "   Without sync: I lose ALL previous work context"
+echo ""
+
+# Show current project focus
+if [ -f "$TODO_FILE" ]; then
+    echo "📋 Current Project Sections:"
+    grep -n "^## " "$TODO_FILE" | head -5 | sed 's/^/   /'
+    echo ""
+    
+    echo "🎯 Framework Progress (incomplete items):"
+    grep -A 50 "## AI-First Development Framework Setup" "$TODO_FILE" | \
+    grep "^- \[ \]" | head -5 | sed 's/^- \[ \]/   ❌/' 
+    echo ""
+    
+    echo "✅ Completed Framework Items:"  
+    grep -A 50 "## AI-First Development Framework Setup" "$TODO_FILE" | \
+    grep "^- \[x\]" | head -3 | sed 's/^- \[x\]/   ✅/'
+else
+    echo "❌ $TODO_FILE not found - cannot sync"
+fi
+
+echo ""
+echo "💡 EXACT SYNC COMMAND:"
+echo "   'Load $TODO_FILE status and sync todos'"
+echo ""
+
+echo "📍 After sync, continue with current task or ask:"
+echo "   'What's the next priority from $TODO_FILE?'"
