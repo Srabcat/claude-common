@@ -75,6 +75,49 @@ play_waiting_sound() {
     fi
 }
 
+# Show sync reminders for session continuity
+show_sync_reminders() {
+    echo ""
+    echo "🔄 SESSION CONTINUITY REMINDERS:"
+    echo "================================"
+    echo ""
+    
+    # Check if we're at session start or end
+    if [ "$CLAUDE_SESSION_START" = "1" ]; then
+        echo "📍 NEW SESSION DETECTED - Sync needed!"
+        echo "   Run: /sync-start"
+        echo "   Then say: 'Load PROJECT-TODO.md status and sync todos'"
+        echo ""
+    elif [ "$CLAUDE_SESSION_END" = "1" ]; then
+        echo "💾 SESSION ENDING - Save progress!"
+        echo "   Run: /sync-end"
+        echo "   Then say: 'Update PROJECT-TODO.md with completed work'"
+        echo ""
+    else
+        # Regular task completion
+        echo "💡 Don't forget session sync:"
+        echo "   • Start sessions: /sync-start → sync todos"
+        echo "   • End sessions: /sync-end → save progress"
+        echo "   • Check status: /project-status"
+        echo ""
+    fi
+    
+    # Check if PROJECT-TODO.md exists
+    if [ -f "PROJECT-TODO.md" ]; then
+        # Show quick framework progress
+        TOTAL_FRAMEWORK=$(grep -A 50 "## AI-First Development Framework Setup" PROJECT-TODO.md 2>/dev/null | grep "^- \[" | wc -l | tr -d ' ')
+        COMPLETED_FRAMEWORK=$(grep -A 50 "## AI-First Development Framework Setup" PROJECT-TODO.md 2>/dev/null | grep "^- \[x\]" | wc -l | tr -d ' ')
+        
+        if [ "$TOTAL_FRAMEWORK" -gt 0 ]; then
+            PERCENT=$((COMPLETED_FRAMEWORK * 100 / TOTAL_FRAMEWORK))
+            echo "📊 Framework Progress: $COMPLETED_FRAMEWORK/$TOTAL_FRAMEWORK tasks ($PERCENT%)"
+        fi
+    else
+        echo "⚠️  PROJECT-TODO.md not found - sync may not work properly"
+    fi
+    echo ""
+}
+
 # Detect context and play appropriate sound
 # Check if we can detect Claude waiting for user choice (1, 2, 3)
 # This could be enhanced by checking recent terminal output or process state
@@ -88,6 +131,208 @@ if [ "$CLAUDE_WAITING" = "1" ]; then
 else
     play_completion_sound
 fi
+
+# Show sync reminders after sound
+show_sync_reminders
+
+# Session activity tracking for duplicate prevention
+show_session_activity() {
+    echo ""
+    echo "📋 SESSION ACTIVITY SUMMARY:"
+    echo "============================"
+    
+    # Session timestamp tracking with file snapshot
+    SESSION_START_FILE="/tmp/claude_session_start"
+    SESSION_SNAPSHOT="/tmp/claude_session_files"
+    
+    if [ ! -f "$SESSION_START_FILE" ]; then
+        # Create session start marker and file snapshot
+        date > "$SESSION_START_FILE"
+        # Only track likely files I create (not thousands of library files)
+        find "$REPO_ROOT" -maxdepth 3 -type f \( -name "*.md" -o -name "CLAUDE.md" -o -name "README.md" -o -name "*.sh" \) | \
+            grep -v node_modules | grep -v .git | grep -v .DS_Store | \
+            sort > "$SESSION_SNAPSHOT" 2>/dev/null
+        echo "📍 NEW SESSION STARTED: $(cat $SESSION_START_FILE)"
+        echo "   📸 File snapshot created for deletion tracking"
+        echo "   🔍 This hook will track all file changes from this point forward"
+        echo ""
+        return 0
+    fi
+    
+    SESSION_START=$(cat "$SESSION_START_FILE")
+    echo "📅 SESSION STARTED: $SESSION_START"
+    echo ""
+    
+    # Cross-repository file tracking
+    REPO_ROOT="/Users/april/10x10-Repos"
+    
+    echo "🆕 FILES CREATED THIS SESSION:"
+    echo "   Scanning all repositories..."
+    
+    # Find files newer than session start - only likely files I create
+    CREATED_FILES=$(find "$REPO_ROOT" -maxdepth 3 -type f -newer "$SESSION_START_FILE" 2>/dev/null | \
+        grep -E '\.(md|sh)$' | \
+        grep -v node_modules | \
+        grep -v .git | \
+        grep -v .DS_Store | \
+        head -10)
+    
+    if [ -n "$CREATED_FILES" ]; then
+        echo "$CREATED_FILES" | sed "s|$REPO_ROOT/||" | sed 's/^/   /'
+    else
+        echo "   (No new files detected)"
+    fi
+    
+    echo ""
+    echo "🗑️  FILES DELETED THIS SESSION:"
+    if [ -f "$SESSION_SNAPSHOT" ]; then
+        # Compare session snapshot with current files to find deletions
+        CURRENT_FILES="/tmp/claude_current_files"
+        find "$REPO_ROOT" -maxdepth 3 -type f \( -name "*.md" -o -name "*.sh" \) | \
+            grep -v node_modules | grep -v .git | grep -v .DS_Store | \
+            sort > "$CURRENT_FILES" 2>/dev/null
+        
+        DELETED_FILES=$(comm -23 "$SESSION_SNAPSHOT" "$CURRENT_FILES")
+        if [ -n "$DELETED_FILES" ]; then
+            echo "$DELETED_FILES" | sed "s|$REPO_ROOT/||" | sed 's/^/   /'
+        else
+            echo "   (No files deleted)"
+        fi
+        rm -f "$CURRENT_FILES"
+    else
+        echo "   (No snapshot available - cannot detect deletions)"
+    fi
+    
+    echo ""
+    echo "✏️  FILES MODIFIED THIS SESSION:"
+    
+    # Check git status in each repository
+    for repo in "$REPO_ROOT"/*; do
+        if [ -d "$repo/.git" ]; then
+            REPO_NAME=$(basename "$repo")
+            cd "$repo"
+            MODIFIED=$(git diff --name-only 2>/dev/null)
+            if [ -n "$MODIFIED" ]; then
+                echo "   📁 $REPO_NAME/:"
+                echo "$MODIFIED" | sed 's/^/      /'
+            fi
+        fi
+    done
+    
+    # Also check for unstaged files in non-git areas
+    MODIFIED_FILES=$(find "$REPO_ROOT" -type f -newer "$SESSION_START_FILE" 2>/dev/null | \
+        grep -E '\.(md|js|ts|tsx|json|py|sh)$' | \
+        grep -v node_modules | \
+        grep -v .git | \
+        grep -v .DS_Store | \
+        head -10)
+        
+    if [ -n "$MODIFIED_FILES" ]; then
+        echo "   📝 Other modifications:"
+        echo "$MODIFIED_FILES" | sed "s|$REPO_ROOT/||" | sed 's/^/      /'
+    fi
+    
+    echo ""
+    echo "⚠️  DANGEROUS FILE PATTERNS CHECK:"
+    DANGEROUS=$(find "$REPO_ROOT" -type f -newer "$SESSION_START_FILE" 2>/dev/null | \
+        grep -E '(node_modules|\.env|\.log|\.DS_Store|dist/|build/)' | head -5)
+    
+    if [ -n "$DANGEROUS" ]; then
+        echo "   🚨 DANGER: These files should NOT be committed:"
+        echo "$DANGEROUS" | sed "s|$REPO_ROOT/||" | sed 's/^/      ⚠️  /'
+    else
+        echo "   ✅ No dangerous file patterns detected"
+    fi
+    
+    echo ""
+    echo "🔍 DUPLICATE PREVENTION CHECK:"
+    echo "   → Review above files for potential duplicates"
+    echo "   → Check for repeated information within files"
+    echo "   → Verify no identical files created across repositories"
+    echo ""
+    echo "👀 HUMAN REVIEW CHECKLIST:"
+    echo "   → Any duplicate files created?"
+    echo "   → Any files that should be consolidated?"
+    echo "   → All new files have unique, single purpose?"
+    echo "   → Any dangerous files to exclude from git?"
+    echo "   → Any large files that might break git?"
+    echo ""
+    echo "🔄 SESSION MANAGEMENT:"
+    echo "   → To reset session tracking: rm /tmp/claude_session_start /tmp/claude_session_files"
+    echo "   → Session auto-clears on system restart"
+    echo ""
+    
+    # Auto-update CHANGELOG.md
+    update_changelog() {
+        echo ""
+        echo "📝 AUTO-UPDATING CHANGELOG.MD:"
+        
+        # Get current Claude message number from user
+        read -p "   Enter current Claude message number (e.g., 47): " MSG_NUM
+        
+        if [ -n "$MSG_NUM" ]; then
+            # Create temp file with new entry
+            TEMP_CHANGELOG="/tmp/new_changelog_entry"
+            echo "## $(date '+%Y-%m-%d %H:%M') - Message $MSG_NUM" > "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+            
+            # Add created files
+            if [ -n "$CREATED_FILES" ]; then
+                echo "### Created:" >> "$TEMP_CHANGELOG"
+                echo "$CREATED_FILES" | sed "s|$REPO_ROOT/||" | sed 's/^/- /' >> "$TEMP_CHANGELOG"
+                echo "" >> "$TEMP_CHANGELOG"
+            fi
+            
+            # Add modified files from git repos
+            echo "### Modified:" >> "$TEMP_CHANGELOG"
+            HAS_MODS=false
+            for repo in "$REPO_ROOT"/*; do
+                if [ -d "$repo/.git" ]; then
+                    REPO_NAME=$(basename "$repo")
+                    cd "$repo"
+                    MODIFIED=$(git diff --name-only 2>/dev/null)
+                    if [ -n "$MODIFIED" ]; then
+                        echo "- **$REPO_NAME/**: $(echo "$MODIFIED" | tr '\n' ', ' | sed 's/,$//')" >> "$TEMP_CHANGELOG"
+                        HAS_MODS=true
+                    fi
+                fi
+            done
+            
+            if [ "$HAS_MODS" = false ]; then
+                echo "- (No git modifications detected)" >> "$TEMP_CHANGELOG"
+            fi
+            
+            echo "" >> "$TEMP_CHANGELOG"
+            echo "---" >> "$TEMP_CHANGELOG"
+            echo "" >> "$TEMP_CHANGELOG"
+            
+            # Prepend to existing CHANGELOG.md
+            if [ -f "/Users/april/10x10-Repos/CHANGELOG.md" ]; then
+                cat "$TEMP_CHANGELOG" /Users/april/10x10-Repos/CHANGELOG.md > /tmp/combined_changelog
+                mv /tmp/combined_changelog /Users/april/10x10-Repos/CHANGELOG.md
+            else
+                mv "$TEMP_CHANGELOG" /Users/april/10x10-Repos/CHANGELOG.md
+            fi
+            
+            rm -f "$TEMP_CHANGELOG"
+            echo "   ✅ CHANGELOG.md updated with message $MSG_NUM entry"
+        else
+            echo "   ⚠️  Skipped CHANGELOG.md update (no message number provided)"
+        fi
+    }
+    
+    # Run changelog update
+    update_changelog
+    
+    echo ""
+    echo "🔄 SESSION MANAGEMENT:"
+    echo "   → To reset session tracking: rm /tmp/claude_session_start /tmp/claude_session_files"
+    echo "   → Session auto-clears on system restart"
+    echo ""
+}
+
+# Show session activity for human oversight
+show_session_activity
 
 # Optional: Add visual notification for macOS
 if command -v osascript >/dev/null 2>&1; then

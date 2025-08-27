@@ -30,6 +30,18 @@ cd 10by10-web-app-client && npm run start:local
 cd NextSaaS && npm run dev
 ```
 
+## Development Tools
+
+### Serena MCP Server
+For enhanced Claude Code integration with semantic code editing tools:
+
+```bash
+# Start Serena MCP server
+uvx --from git+https://github.com/oraios/serena serena start-mcp-server --log-level DEBUG
+```
+
+**Note**: The server may exit after initialization - this is normal behavior. Claude Code will restart it automatically when needed.
+
 ## Quick Start
 
 1. **Link a repository to claude-common:**
