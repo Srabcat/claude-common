@@ -132,3 +132,7 @@ Each repository that wants to use claude-common should:
    ```bash
    claude --add-dir "$(git rev-parse --show-toplevel)/../claude-common"
    ```
+
+
+MCP
+1. Serena - https://www.youtube.com/watch?v=amEUIuBKwvg

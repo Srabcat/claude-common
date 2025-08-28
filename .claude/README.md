@@ -47,3 +47,21 @@ Shared documentation and guidelines:
 **Global .claude/** handles universal hooks and workflows.
 
 This creates a three-tier system: universal → shared → project-specific.
+
+<!-- IGNORE_AI_START -->
+This section is for human reference only. Tell AI to ignore below:
+
+## MCP:
+1. Serena MCP server: https://github.com/oraios/serena
+
+## Claude Code Best Practices
+1. Anthropic's Claude Code best practices:
+https://www.anthropic.com/engineering.
+2. Claude Code set up: https://www.youtube.com/watch?v=amEUIuBKwvg  https://github.com/coleam00/context-engineering-intro/blob/main/claude-code-full-guide/.claude/commands/primer.md
+
+
+## Dev Ops:
+Anthropic's guide to devcontainers:
+https://docs.anthropic.com/en/docs/cl...
+
+<!-- IGNORE_AI_END -->
