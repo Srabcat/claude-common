@@ -1,4 +1,4 @@
-# Claude-common: Shared AI Development Patterns
+# Claude-common/.claude: Shared AI Development Patterns
 
 This repository contains reusable templates and patterns for AI-first development across all 10x10 projects.
 
@@ -28,28 +28,23 @@ Shared documentation and guidelines:
 - Cross-project standards
 - AI productivity guidelines
 
-## Usage
-
-### For New Projects
-1. Copy relevant templates from `/templates/`
-2. Adapt to project-specific needs
-3. Reference patterns from `/patterns/`
-
-### For Existing Projects
-1. Reference patterns for consistency
-2. Update templates with improvements
-3. Share learnings back to common repo
-
-## Integration with Project-Specific .claude/
-
-**Claude-common** provides the templates and patterns.
-**Project .claude/** implements project-specific adaptations.
-**Global .claude/** handles universal hooks and workflows.
-
 This creates a three-tier system: universal → shared → project-specific.
 
 <!-- IGNORE_AI_START -->
 This section is for human reference only. Tell AI to ignore below:
+
+## Advanced Prompting Techniques
+Power Keywords: Claude responds to certain keywords with enhanced behavior (information dense keywords):
+
+IMPORTANT: Emphasizes critical instructions that should not be overlooked
+Proactively: Encourages Claude to take initiative and suggest improvements
+Ultra-think: Can trigger more thorough analysis (use sparingly)
+Essential Prompt Engineering Tips:
+
+Avoid prompting for "production-ready" code - this often leads to over-engineering
+Prompt Claude to write scripts to check its work: "After implementing, create a validation script"
+Avoid backward compatibility unless specifically needed - Claude tends to preserve old code unnecessarily
+Focus on clarity and specific requirements rather than vague quality descriptors
 
 ## MCP:
 1. Serena MCP server: https://github.com/oraios/serena
@@ -57,11 +52,18 @@ This section is for human reference only. Tell AI to ignore below:
 ## Claude Code Best Practices
 1. Anthropic's Claude Code best practices:
 https://www.anthropic.com/engineering.
-2. Claude Code set up: https://www.youtube.com/watch?v=amEUIuBKwvg  https://github.com/coleam00/context-engineering-intro/blob/main/claude-code-full-guide/.claude/commands/primer.md
+2. Context Engineering: https://www.youtube.com/watch?v=amEUIuBKwvg  https://github.com/coleam00/context-engineering-intro/blob/main/claude-code-full-guide/.claude/commands/primer.md
+3. Dont break production code with ADR - https://www.youtube.com/watch?v=CMYhZMtPI_E https://github.com/AI-Engineer-Skool/prompt-vault/tree/main/self-documenting-ai-agent
 
 
 ## Dev Ops:
 Anthropic's guide to devcontainers:
 https://docs.anthropic.com/en/docs/cl...
+
+## Tools
+- https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor?tab=readme-ov-file#runtime-issues
+
+## TODO
+- avoid stale file references: https://www.youtube.com/watch?v=ohjMGnEaBxk
 
 <!-- IGNORE_AI_END -->

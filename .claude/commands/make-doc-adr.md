@@ -11,7 +11,7 @@ Run `git diff main` to analyze all changes made in this branch.
    - Trade-offs and alternatives (based on what you see in the code)
 
 **Instructions:**
-- Use the ADR template from `./.claude/templates/adr-template.md` if it exists
+- Use the ADR template from `docs/templates/adr-template.md` if it exists
 - Create the ADR in `docs/adr/` folder - ask me if you cant find the folder
 - Name it: `semantic-caching.md` (or other descriptive name based on the change)
 - Focus on WHAT you see in the code, not hypotheticals

@@ -71,3 +71,7 @@
 
 ## Review Schedule
 [When should this decision be reviewed? What would trigger a re-evaluation?]
+
+<!-- IGNORE_AI_START -->
+https://github.com/AI-Engineer-Skool/prompt-vault/tree/main/self-documenting-ai-agent
+<!-- IGNORE_AI_END -->

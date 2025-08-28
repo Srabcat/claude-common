@@ -1,4 +1,8 @@
 {
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); session_id=$(echo \"$input\" | jq -r '.session_id // \"no-session\"'); model=$(echo \"$input\" | jq -r '.model.display_name // \"Claude\"'); project_dir=$(echo \"$input\" | jq -r '.workspace.project_dir // \"no-project\"'); transcript=$(echo \"$input\" | jq -r '.transcript_path // \"no-transcript\"'); repo_name=$(basename \"$(git rev-parse --show-toplevel 2>/dev/null || echo 'no-repo')\"); branch=$(git branch --show-current 2>/dev/null || echo 'no-git'); echo \"Dir: $PWD | Project: $project_dir | Repo: $repo_name:$branch | Model: $model | Session: $session_id | Transcript: $transcript\""
+  },
   "permissions": {
     "allow": [
       "Bash(git add:*)",
@@ -46,7 +50,8 @@
       "WebFetch(domain:developer.salesforce.com)",
       "WebFetch(domain:vertabelo.com)",
       "WebFetch(domain:stackoverflow.com)",
-      "WebFetch(domain:kb.bullhorn.com)"
+      "WebFetch(domain:kb.bullhorn.com)",
+      "Read(~/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
