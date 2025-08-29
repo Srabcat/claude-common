@@ -149,7 +149,7 @@ show_session_activity() {
         # Create session start marker and file snapshot
         date > "$SESSION_START_FILE"
         # Only track likely files I create (not thousands of library files)
-        find "$REPO_ROOT" -maxdepth 3 -type f \( -name "*.md" -o -name "CLAUDE.md" -o -name "README.md" -o -name "*.sh" \) | \
+        find "$(pwd)" -maxdepth 3 -type f \( -name "*.md" -o -name "CLAUDE.md" -o -name "README.md" -o -name "*.sh" \) | \
             grep -v node_modules | grep -v .git | grep -v .DS_Store | \
             sort > "$SESSION_SNAPSHOT" 2>/dev/null
         echo "📍 NEW SESSION STARTED: $(cat $SESSION_START_FILE)"
@@ -164,7 +164,7 @@ show_session_activity() {
     echo ""
     
     # Cross-repository file tracking
-    REPO_ROOT="/Users/april/10x10-Repos"
+    REPO_ROOT="$(dirname $(dirname $(pwd)))"
     
     echo "🆕 FILES CREATED THIS SESSION:"
     echo "   Scanning all repositories..."
@@ -307,11 +307,12 @@ show_session_activity() {
             echo "" >> "$TEMP_CHANGELOG"
             
             # Prepend to existing CHANGELOG.md
-            if [ -f "/Users/april/10x10-Repos/CHANGELOG.md" ]; then
-                cat "$TEMP_CHANGELOG" /Users/april/10x10-Repos/CHANGELOG.md > /tmp/combined_changelog
-                mv /tmp/combined_changelog /Users/april/10x10-Repos/CHANGELOG.md
+            CHANGELOG_PATH="$(dirname $(dirname $(pwd)))/CHANGELOG.md"
+            if [ -f "$CHANGELOG_PATH" ]; then
+                cat "$TEMP_CHANGELOG" "$CHANGELOG_PATH" > /tmp/combined_changelog
+                mv /tmp/combined_changelog "$CHANGELOG_PATH"
             else
-                mv "$TEMP_CHANGELOG" /Users/april/10x10-Repos/CHANGELOG.md
+                mv "$TEMP_CHANGELOG" "$CHANGELOG_PATH"
             fi
             
             rm -f "$TEMP_CHANGELOG"

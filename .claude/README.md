@@ -47,11 +47,14 @@ Avoid backward compatibility unless specifically needed - Claude tends to preser
 Focus on clarity and specific requirements rather than vague quality descriptors
 
 ## MCP:
-1. Serena MCP server: https://github.com/oraios/serena
+- Serena MCP server: https://github.com/oraios/serena
+- Playwright: https://www.youtube.com/watch?v=NjOqPbUecC4
+
 
 ## Claude Code Best Practices
 1. Anthropic's Claude Code best practices:
 https://www.anthropic.com/engineering.
+https://www.anthropic.com/engineering/claude-code-best-practices
 2. Context Engineering: https://www.youtube.com/watch?v=amEUIuBKwvg  https://github.com/coleam00/context-engineering-intro/blob/main/claude-code-full-guide/.claude/commands/primer.md
 3. Dont break production code with ADR - https://www.youtube.com/watch?v=CMYhZMtPI_E https://github.com/AI-Engineer-Skool/prompt-vault/tree/main/self-documenting-ai-agent
 
@@ -62,11 +65,13 @@ https://docs.anthropic.com/en/docs/cl...
 
 ## Tools
 - https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor?tab=readme-ov-file#runtime-issues
+- claude --dangerously-skip-permissions
 
 ## TODO
 - avoid stale file references: https://www.youtube.com/watch?v=ohjMGnEaBxk https://github.com/AI-Engineer-Skool/prompt-vault/blob/main/claude-md-memory-workflow/update-claude-md.yml
 - Subagents - https://github.com/coleam00/context-engineering-intro/tree/main/claude-code-full-guide
 - Ref, Security, memory, Exa, playwright - https://www.youtube.com/watch?v=sF799nFJONk
+- Claude class: https://anthropic.skilljar.com/
 
 
 <!-- IGNORE_AI_END -->

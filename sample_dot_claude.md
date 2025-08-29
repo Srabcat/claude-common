@@ -1,28 +1,5 @@
 # Project: Hiring Marketplace Platform
 
-
-------------------------------------
-
-Let me search for the latest Claude Code documentation to give you current best practices.Let me fetch the official documentation to get the most accurate information:Based on the official documentation and best practices, here's your comprehensive Claude Code guide:
-
-# Claude Code Best Practices - August 2025
-
-## Core Setup (Must Do First)
-
-### 1. Install & Basic Config
-```bash
-# Install Claude Code extension in VS Code/Cursor
-# Install GitHub CLI for enhanced functionality
-brew install gh
-```
-
-### 2. Create Your CLAUDE.md File (Essential!)
-
-Put this in your project root and **check it into git**:
-
-```markdown
-# Project: Hiring Marketplace Platform
-
 ## Bash Commands
 - `npm run dev` - Start development server
 - `npm run build` - Build for production  
@@ -184,5 +161,3 @@ Add useful MCP servers to `.mcp.json`:
 
 **Q4**: What's the most important file for your project setup?
 **A**: CLAUDE.md in your project root (and check it into git!)
-
-Start with the CLAUDE.md file and the "explore → plan → code → commit" workflow - that alone will 10x your productivity. Once you're comfortable, add the parallel sessions and custom slash commands.
