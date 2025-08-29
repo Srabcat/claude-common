@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "input=$(cat); session_id=$(echo \"$input\" | jq -r '.session_id // \"no-session\"'); model=$(echo \"$input\" | jq -r '.model.display_name // \"Claude\"'); project_dir=$(echo \"$input\" | jq -r '.workspace.project_dir // \"no-project\"'); transcript=$(echo \"$input\" | jq -r '.transcript_path // \"no-transcript\"'); repo_name=$(basename \"$(git rev-parse --show-toplevel 2>/dev/null || echo 'no-repo')\"); branch=$(git branch --show-current 2>/dev/null || echo 'no-git'); echo \"Dir: $PWD | Project: $project_dir | Repo: $repo_name:$branch | Model: $model | Session: $session_id | Transcript: $transcript\""
+    "command": "input=$(cat 2>/dev/null || echo '{}'); session_id=$(echo \"$input\" | sed -n 's/.*\"session_id\":\"\\([^\"]*\\)\".*/\\1/p'); if [ -z \"$session_id\" ]; then session_id='session-na'; fi; model=$(echo \"$input\" | sed -n 's/.*\"display_name\":\"\\([^\"]*\\)\".*/\\1/p'); if [ -z \"$model\" ]; then model='Sonnet 4'; fi; repo_name=$(basename \"$(git rev-parse --show-toplevel 2>/dev/null)\" 2>/dev/null || echo 'no-repo'); branch=$(git branch --show-current 2>/dev/null || echo 'no-git'); echo \"$PWD | $repo_name:$branch | $model | $session_id\""
   },
   "permissions": {
     "allow": [

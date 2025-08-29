@@ -48,3 +48,20 @@ Run manually to test:
 ```bash
 /Users/april/10x10-Repos/claude-common/.claude/hooks/post-task
 ```
+
+<!-- IGNORE_AI_START -->
+This section is for human reference only. Tell AI to ignore below:
+
+Hooks documentation - https://docs.anthropic.com/en/docs/claude-code/hooks
+
+PreToolUse: Before tool execution (can block operations)
+PostToolUse: After successful tool completion
+UserPromptSubmit: When user submits a prompt
+SubagentStop: When a subagent completes its task
+Stop: When the main agent finishes responding
+SessionStart: At session initialization
+PreCompact: Before context compaction
+Notification: During system notifications
+Learn more in the Hooks documentation.
+
+<!-- IGNORE_AI_END -->

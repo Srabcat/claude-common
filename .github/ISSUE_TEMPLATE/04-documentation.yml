@@ -1,0 +1,42 @@
+name: Documentation
+description: Report documentation issues or request clarification
+title: "[Docs]: "
+labels: ["documentation", "question"]
+assignees: []
+
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Issue Type
+      options:
+        - Missing documentation
+        - Incorrect documentation
+        - Unclear documentation
+        - Request for examples
+        - API documentation
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Where is the documentation issue?
+      placeholder: "README.md, API docs, specific function docstring, etc."
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to be improved or clarified?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: How could the documentation be improved?

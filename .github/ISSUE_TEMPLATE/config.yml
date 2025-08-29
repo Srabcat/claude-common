@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/yourorg/yourrepo/discussions
+    about: For questions and general discussions, please use GitHub Discussions
+  - name: Security Issue
+    url: mailto:security@yourorg.com
+    about: For security vulnerabilities, please email our security team

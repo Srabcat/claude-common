@@ -64,6 +64,9 @@ https://docs.anthropic.com/en/docs/cl...
 - https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor?tab=readme-ov-file#runtime-issues
 
 ## TODO
-- avoid stale file references: https://www.youtube.com/watch?v=ohjMGnEaBxk
+- avoid stale file references: https://www.youtube.com/watch?v=ohjMGnEaBxk https://github.com/AI-Engineer-Skool/prompt-vault/blob/main/claude-md-memory-workflow/update-claude-md.yml
+- Subagents - https://github.com/coleam00/context-engineering-intro/tree/main/claude-code-full-guide
+- Ref, Security, memory, Exa, playwright - https://www.youtube.com/watch?v=sF799nFJONk
+
 
 <!-- IGNORE_AI_END -->
