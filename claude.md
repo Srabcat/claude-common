@@ -1,5 +1,8 @@
 # Claude Common - Universal Instructions
 
+## Current Development Mode: FILE_CLEANUP
+**Active Mode:** FILE_CLEANUP
+
 AI Workflow:
 	1.	Confirm desired output + success criteria before starting.
 	2.	Ask if unsure — no guessing. If sure, summarize your understanding.

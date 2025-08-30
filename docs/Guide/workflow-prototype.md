@@ -1,6 +1,6 @@
 # /prototype [feature-name] - Speed-First Development Mode
 
-You're now in **PROTOTYPE MODE** - prioritize speed and experimentation over code quality. Capture tech debt and what should be fixed before done in a TODO section.
+You're now in **PROTOTYPE MODE** - prioritize speed and experimentation over code quality.
 
 ## Git Setup 
 ```bash
@@ -16,7 +16,6 @@ echo "prototype/[feature-name]" > .prototype-branch
 
 ## Git Checkpoint Commands
 - `/checkpoint [name]` - Save progress during prototype phase  
-- `/pr-ready` - Mark prototype complete
 
 ## Code Style (Relaxed)
 - Use `any` types when TypeScript gets in the way
@@ -51,7 +50,7 @@ echo "prototype/[feature-name]" > .prototype-branch
 - Multiple commits = multiple checkpoints
 
 ## Testing
-- Ask me to do Manual testing only
+- Manual testing only
 - Use browser dev tools
 - Test happy path scenarios
 - Real edge cases come later
